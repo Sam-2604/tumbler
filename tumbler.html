@@ -231,6 +231,7 @@
     <button class="btn" id="btnNew">New Game</button>
     <button class="btn ghost" id="btnChapters">Chapters</button>
     <div id="levelSel" style="display:none"></div>
+    <button class="btn ghost" id="btnStory" style="display:none">The Story</button>
     <button class="btn ghost" id="btnHow">How to Play</button>
   </div>
 
@@ -577,6 +578,19 @@ const TITLE_MUSIC={root:57,scale:"aeolian",bpm:50,prog:[0,5,3,4],density:.15,lea
 const HOWTO_KEY="tumbler_howto_v1";
 const HOWTO=[{chap:"A Thief's Primer",ttl:"How to Play",next:"Tap to return",
  body:"Harrowmere keeps three kinds of locks, and each asks a different question.\n\n<em>Pin locks</em>: hold to raise the chosen pin, and let go inside the bright band. Tap a pin (or use ← →) to choose which one you work on.\n\n<em>Warded rings</em>: the rings spin on their own. Tap at the right moment to freeze each ring's gap on the golden bolt-line at the top.\n\n<em>Dials</em>: hold to sweep the needle, and release inside the lit arc. The direction reverses with every ring you set.\n\nPeople will speak to you while you work. The lock waits while you read, and the clock holds; tap anywhere, or press Enter, to go on. Sound, volume, restarting, and the keyboard controls live behind the small gear at the top of the screen."}];
+
+/* Plain-words retelling, unlocked once all ten chapters are done */
+const RECAP=[
+ {chap:"The Honest Account",ttl:"Two cities",
+  body:"A hundred years ago there were two cities: Harrowmere on the shore, and Sorenne below it, behind great sea-gates. Sorenne was called the Honest City because it kept the Vault of Names, a public archive where every birth, debt, deed and crime was written down and could never be erased.\n\nThe seven Cormorant Houses owed Sorenne more than they could ever repay. So they did not repay it. They bribed a keeper named Imre Shrike to open the sea-gates from inside, and the sea drowned forty thousand people in an afternoon.\n\nOne keeper stayed. Aldous Crane locked the Vault shut so the records would outlive the crime, and drowned with them. His lock takes two half-keys, called wings, turned together in agreement."},
+ {ttl:"The Keywrights",
+  body:"Harrowmere was built on top of the drowned city, and the Houses taught everyone to forget. But Crane's family survived above, in secret. They were called Keywrights: lock-makers who kept the Vault's lock alive, parent to child, for a hundred years.\n\nTwelve years before this story begins, the Houses decided to end the line for good. A dealer in stolen goods named Rooke, the best friend Calder Vane had, sold him to the Charter Court, and Calder was hanged in the fish market.\n\nBut Rooke set his own price for the betrayal: the daughter lives. The Houses paid it. Rooke took the girl in, fed her, and taught her a trade. The half-key on her cord, the wing her father left her, hung in plain sight all along."},
+ {ttl:"The thief",
+  body:"Kess grew up believing her father was an ordinary locksmith who was hanged. She became the best pick in Harrowmere, working jobs for Rooke, who never said why he wanted what he wanted.\n\nThen the jobs started pointing somewhere. Dredging papers: the Houses pulling drowned things up from the harbour, hunting for the Vault. A stolen box with her father's falcon mark on the lid, and inside it his letter: trust no one who feeds you, for they were paid to.\n\nWhen she got too close, Rooke had her arrested. In his ledger it was not a betrayal. A prison cell was the safest room left in Harrowmere, because the Houses' next offer was a rope."},
+ {ttl:"The way down",
+  body:"In Saltrock Prison an old mapmaker named Anselm recognised the wing at her throat and showed her the way out: down, through a flood-gate, into Sorenne itself. He asked one thing in return. The Houses had erased his daughter Lessa, every record of her burned. One page in the Vault still said she was born. Read it out loud.\n\nKess crossed the drowned city on the Wardens' dry tunnels and found her father's workshop, and the message he had cut into the wall for her. The Vault is a machine. Open it, and the record-shelves rise up the inside of the Bell Tower, above the tide, where the whole city can read them, and nothing can ever wind them back down.\n\nShe also found the letter that had lured her father to his death. It was sealed with a rook."},
+ {ttl:"The two keys",
+  body:"At the Vault, Rooke was waiting with the second wing: Shrike's, the traitor's own key, which the Houses had paid him to bury. Her key turned to open the door. His turned to seal it forever. A lock built for agreement tears itself apart when the keys fight, and a dead lock stays shut for good. Rooke only needed to hold on.\n\nOn the last ring, his pull never came. He let go. Winning meant breaking the last thing the Vanes ever built, in front of the last Vane alive. After twelve years of keeping her as his apology, it was the one price he would not pay.\n\nThe shelves rose into the storm, and the city read the Houses' own ledger. Rooke confessed under his own seal. Anselm walked free, Lessa's page was read out loud, and Kess visits his cell every month. They talk about locks.\n\nBy spring, the under-folk were using their old names again. Out loud. In daylight."}];
 
 /* ---------- DOM / STATE ---------- */
 const $=id=>document.getElementById(id);
@@ -1172,7 +1186,9 @@ function goTitle(){ state="title"; lock=null; currentScene="title"; sceneImg="ti
   Music.start(TITLE_MUSIC); /* silent no-op until audio is ready and music is on */
   elHud.classList.remove("on"); elCtrls.classList.remove("on"); $("backBtn").classList.remove("on"); hideChNav(); hideDialogue(); hideAllOverlays();
   setBg({bg:"radial-gradient(120% 90% at 50% 22%,#241a0c,#0c0b09 72%)",accent:"#c9a24b",glow:"#f4c969"});
-  $("btnContinue").style.display=unlocked>1?"block":"none"; buildChapters(); $("title").classList.add("show"); }
+  $("btnContinue").style.display=unlocked>1?"block":"none";
+  $("btnStory").style.display=unlocked>LEVELS.length?"block":"none";
+  buildChapters(); $("title").classList.add("show"); }
 
 let storyPages=[],storyPage=0,storyDone=null,storyIsOutro=false,storyBackTo=null,storyNavLevel=null;
 function hideChNav(){ $("chPrev").classList.remove("on"); $("chNext").classList.remove("on"); }
@@ -1332,6 +1348,7 @@ $("btnNew").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo
 $("btnContinue").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>startLevel(Math.min(unlocked-1,LEVELS.length-1))); });
 $("btnChapters").addEventListener("click",()=>{ const s=$("levelSel"); s.style.display=s.style.display==="none"?"grid":"none"; });
 $("btnHow").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); showStory(HOWTO,()=>goTitle(),false,"Back","title"); });
+$("btnStory").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); showStory(RECAP,()=>goTitle(),false,"Back","title"); });
 $("btnAgain").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>beginPlay(levelIdx)); });
 $("btnQuit").addEventListener("click",()=>{ fadeTo(()=>goTitle()); });
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) Audio2.suspend(); else Audio2.resume(); });

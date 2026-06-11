@@ -1,0 +1,7 @@
+# art ships with the deployed site, not the repo
+assets/
+# private notes
+STUDY.md
+FEEDBACK.md
+imageprompts.txt
+.DS_Store
