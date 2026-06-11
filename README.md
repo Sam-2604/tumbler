@@ -6,7 +6,7 @@ You are Kess, a thief in the sinking city of Harrowmere. Every chapter is a sing
 
 ## Play
 
-The game runs in any modern browser, no install. Play it at: *(link to come)*
+The game runs in any modern browser, no install. Play it at: **[samarthgoradia.com/personal/tools/tumbler](https://samarthgoradia.com/personal/tools/tumbler/)**
 
 ## What's in it
 
@@ -38,3 +38,6 @@ Note: the illustrated backdrops (`assets/`) are not in the repository. Without t
 ## Tech
 
 One self-contained HTML file. No framework, no build step, no dependencies beyond Google Fonts. Canvas rendering, WebAudio synthesis, CSS container queries for the aspect-locked stage. See [TECHNICAL.md](TECHNICAL.md) for the architecture and the reasoning behind it.
+
+---
+<em>Built by Samarth Goradia</em>

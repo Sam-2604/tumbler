@@ -83,3 +83,6 @@ Backdrops are 1536x2752 JPEG (quality 85), converted from PNG originals - 94MB t
 - Writing rules enforced by grep: no em/en dashes, vocabulary bans from the plain-language pass
 
 **Why this shape:** with no framework and no unit-test seams, the honest test is the browser. Driving the real game loop end to end caught the bugs that mattered: overlay taps swallowing input, HUD overlap regressions, dialogue order races.
+
+---
+<em>Samarth Goradia</em>

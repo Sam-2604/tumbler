@@ -104,7 +104,7 @@
   .overlay.show{opacity:1;visibility:visible}
 
   #title{background:linear-gradient(180deg,rgba(8,7,5,.25),rgba(8,7,5,.74))}
-  #title h1{font-family:"Fraunces";font-weight:900;font-size:clamp(58px,18cqw,112px);margin:0;letter-spacing:.05em;line-height:.9;
+  #title h1{font-family:"Fraunces";font-weight:900;font-size:clamp(46px,14cqw,104px);margin:0;letter-spacing:.03em;line-height:.9;
     background:linear-gradient(180deg,var(--glow),var(--accent) 55%,#7c5e23);-webkit-background-clip:text;background-clip:text;color:transparent;
     text-shadow:0 2px 50px rgba(201,162,75,.22)}
   #title .tag{font-style:italic;color:#cbbfa6;font-size:15px;margin:16px 0 2px;letter-spacing:.03em;max-width:320px}
@@ -629,6 +629,14 @@ function getImg(name){ if(!name||!IMAGES_ENABLED) return null;
   if(!e){ e=ImgCache[name]={img:new Image(),ok:false,fail:false};
     e.img.onload=()=>{e.ok=true;}; e.img.onerror=()=>{e.fail=true;}; e.img.src=IMG_DIR+name; }
   return e; }
+/* warm every backdrop in the background, one at a time so a phone connection
+   isn't flooded; kills the blank gap when switching chapters */
+function warmAllImages(){ if(!IMAGES_ENABLED)return;
+  const names=["title.jpg",...LEVELS.map(l=>l.img),"epilogue.jpg"]; let i=0;
+  (function next(){ if(i>=names.length)return; const e=getImg(names[i++]);
+    if(!e||e.ok||e.fail){ next(); return; }
+    e.img.addEventListener("load",next,{once:true}); e.img.addEventListener("error",next,{once:true}); })(); }
+function prefetchChapter(i){ if(i>=0 && i<LEVELS.length) getImg(LEVELS[i].img); }
 function drawImageCover(img,t){ const iw=img.naturalWidth,ih=img.naturalHeight; if(!iw)return;
   const base=Math.max(W/iw,H/ih); const k=RM?1.02:(1.05+Math.sin(t*0.00012)*0.02);
   const s=base*k, dw=iw*s, dh=ih*s;
@@ -1229,7 +1237,7 @@ function backStory(){ if(state!=="story")return;
   else if(storyBackTo==="title"){ storyDone=null; fadeTo(()=>goTitle()); } }
 function finishStory(){ const fn=storyDone; storyDone=null; if(fn)fn(); }
 
-function startLevel(i){ levelIdx=i; const cfg=LEVELS[i]; fadeTo(()=>{ setBg(cfg.pal);
+function startLevel(i){ levelIdx=i; const cfg=LEVELS[i]; getImg(cfg.img); prefetchChapter(i+1); fadeTo(()=>{ setBg(cfg.pal);
   currentScene=cfg.scene; sceneImg=cfg.img; scnInit(cfg.scene);
   Audio2.init(); curAmbSpec=cfg.amb; curMusicSpec=cfg.music;
   Music.start(cfg.music); /* silent no-op while music is toggled off */
@@ -1331,7 +1339,20 @@ window.addEventListener("keydown",e=>{
   else if(e.code==="ArrowRight"){ selectPin(lock,lock.sel+1); e.preventDefault(); }
   else if(e.code==="Space"){ if(!e.repeat){ Audio2.init();Audio2.resume(); startHold(lock); } e.preventDefault(); } });
 window.addEventListener("keyup",e=>{ if(state!=="play"||!lock)return; if(e.code==="Space"){ releaseHold(lock); e.preventDefault(); } });
-$("story").addEventListener("pointerdown",e=>{ Audio2.init();Audio2.resume(); advanceStory(); });
+/* tap advances; drag/scroll does not (a long story page must be scrollable
+   on mobile without skipping ahead) */
+let storyTap={x:0,y:0,top:0};
+$("story").addEventListener("pointerdown",e=>{ Audio2.init();Audio2.resume();
+  const sw=$("story").querySelector(".scrollwrap");
+  storyTap={x:e.clientX,y:e.clientY,top:sw?sw.scrollTop:0}; });
+$("story").addEventListener("pointerup",e=>{
+  if(e.target.closest("button"))return;
+  const sw=$("story").querySelector(".scrollwrap");
+  const moved=Math.abs(e.clientX-storyTap.x)>10||Math.abs(e.clientY-storyTap.y)>10;
+  const scrolled=sw && Math.abs(sw.scrollTop-storyTap.top)>4;
+  if(moved||scrolled)return;
+  if($("story").classList.contains("more") && sw){ sw.scrollBy({top:sw.clientHeight*0.82,behavior:"smooth"}); return; }
+  advanceStory(); });
 $("btnSkip").addEventListener("pointerdown",e=>{ e.stopPropagation(); e.preventDefault(); finishStory(); });
 $("btnBack").addEventListener("pointerdown",e=>{ e.stopPropagation(); e.preventDefault(); Audio2.init();Audio2.resume(); backStory(); });
 $("backBtn").addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation();
@@ -1355,6 +1376,7 @@ document.addEventListener("visibilitychange",()=>{ if(document.hidden) Audio2.su
 
 /* ---------- BOOT ---------- */
 resize(); scnInit("title"); goTitle(); requestAnimationFrame(t=>{ lastT=t; loop(t); });
+(window.requestIdleCallback||(fn=>setTimeout(fn,400)))(warmAllImages);
 </script>
 </body>
 </html>
