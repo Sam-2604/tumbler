@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0c0b09">
+<title>TUMBLER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#0c0b09; --ink:#e9e0cf; --dim:#9a907c; --accent:#c9a24b; --glow:#f4c969; --line:rgba(201,162,75,.28); }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;overscroll-behavior:none;
+    font-family:"Spectral",Georgia,serif;color:var(--ink);-webkit-user-select:none;user-select:none}
+  body{position:fixed;width:100%;display:flex;align-items:center;justify-content:center}
+  /* 9:16 stage to match the backdrop art: fills phones edge-to-edge,
+     letterboxes into a centered portrait card on wide screens so the
+     images are never cropped */
+  #app{position:relative;height:100vh;width:min(100vw,56.25vh);margin:0 auto;background:var(--bg);
+    overflow:hidden;box-shadow:0 0 90px rgba(0,0,0,.9);container-type:inline-size;container-name:stage}
+  @supports (height:100dvh){ #app{height:100dvh;width:min(100vw,56.25dvh)} }
+  @media (min-width:700px){ html,body{background:#050403}
+    #app{border:1px solid rgba(201,162,75,.16);border-radius:6px} }
+  #bgFx{position:absolute;inset:0;pointer-events:none;transition:background 1.4s ease}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #scene{z-index:1}
+  #lock{z-index:3;touch-action:none;transition:opacity .5s,filter .5s}
+  /* story moment: while someone speaks, the lock waits and visibly recedes */
+  #app.reading #lock{opacity:.22;filter:blur(1.5px)}
+  .vig{position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 82% at 50% 40%, transparent 36%, rgba(0,0,0,.78) 100%)}
+  #grain{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.055;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  #flash{position:absolute;inset:0;z-index:14;pointer-events:none;background:#fff;opacity:0}
+
+  #hud{position:absolute;top:0;left:0;right:0;padding:14px 18px 10px 54px;z-index:8;display:flex;
+    align-items:flex-start;justify-content:space-between;pointer-events:none;opacity:0;transition:opacity .5s}
+  #hud.on{opacity:1}
+  #hud .loc{font-family:"Fraunces";font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:var(--accent);
+    text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  #hud .sub{font-size:11px;color:#b8ae98;margin-top:2px;font-style:italic;letter-spacing:.02em;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  /* keep both HUD columns clear of the centered gear (36px wide at 50cqw);
+     hudInfo starts 54px in (back button), timerWrap 18px from the right */
+  #hud .hudInfo{max-width:calc(50cqw - 82px)}
+  #timerWrap{max-width:calc(50cqw - 46px);text-align:right}
+  #timer{font-family:"Fraunces";font-weight:600;font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;
+    text-shadow:0 1px 8px rgba(0,0,0,.9)}
+  #timer.warn{color:#ff7a4d}
+  #pins{font-size:11px;color:#b8ae98;letter-spacing:.14em;margin-top:3px;text-shadow:0 1px 8px rgba(0,0,0,.9)}
+
+  #setBtn{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:26;width:36px;height:36px;
+    border-radius:50%;border:1px solid var(--line);background:rgba(12,10,7,.55);color:var(--accent);
+    font-size:17px;cursor:pointer;backdrop-filter:blur(2px);transition:.25s;line-height:1}
+  #setBtn.off{opacity:.45;color:var(--dim)}
+  #backBtn{position:absolute;top:10px;left:10px;z-index:26;width:36px;height:36px;
+    border-radius:50%;border:1px solid var(--line);background:rgba(12,10,7,.55);color:var(--accent);
+    font-size:16px;cursor:pointer;backdrop-filter:blur(2px);transition:.25s;line-height:1;
+    opacity:0;visibility:hidden}
+  #backBtn.on{opacity:1;visibility:visible}
+
+  #settings{position:absolute;inset:0;z-index:28;display:flex;align-items:center;justify-content:center;
+    padding:20px;background:rgba(5,4,3,.66);backdrop-filter:blur(3px);opacity:0;visibility:hidden;transition:opacity .3s}
+  #settings.show{opacity:1;visibility:visible}
+  .setpanel{width:min(88cqw,330px);max-height:100%;overflow-y:auto;background:linear-gradient(180deg,rgba(22,17,10,.97),rgba(12,10,7,.97));
+    border:1px solid var(--line);border-radius:4px;padding:20px 22px 16px;display:flex;flex-direction:column;gap:9px;text-align:left}
+  .setttl{font-family:"Fraunces";font-weight:600;letter-spacing:.3em;text-transform:uppercase;font-size:13px;
+    color:var(--accent);text-align:center;margin-bottom:6px}
+  .setrow{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--ink)}
+  .tgl{font-family:"Fraunces";font-size:11px;letter-spacing:.14em;text-transform:uppercase;min-width:64px;
+    padding:6px 0;border-radius:2px;border:1px solid var(--line);background:rgba(12,10,7,.5);color:var(--dim);cursor:pointer;transition:.2s}
+  .tgl.on{color:var(--glow);border-color:var(--accent);background:rgba(201,162,75,.12)}
+  .volrow{display:flex;align-items:center;gap:10px;margin:0 0 4px}
+  .volrow input[type=range]{flex:1;width:100%;accent-color:var(--accent);cursor:pointer;min-width:0}
+  .volval{font-size:11px;color:var(--dim);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+  .setkeys{font-size:11.5px;color:var(--dim);line-height:1.7;border-top:1px solid rgba(201,162,75,.14);padding-top:11px;margin-top:3px}
+  @media (hover:none) and (pointer:coarse){ .setkeys{display:none} }
+  .setbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .setbtns .btn{flex:1;min-width:0;margin:0;padding:10px 6px;font-size:11px}
+  #setDone{margin:8px 0 0;min-width:0}
+
+  #dialogue{position:absolute;left:0;right:0;bottom:158px;z-index:9;display:flex;justify-content:center;
+    padding:0 24px;pointer-events:none;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s}
+  #dialogue.on{opacity:1;transform:none}
+  #dialogue .box{max-width:440px;background:linear-gradient(180deg,rgba(12,10,7,.72),rgba(12,10,7,.92));
+    border-left:2px solid var(--accent);padding:12px 17px 11px;border-radius:2px;backdrop-filter:blur(3px);pointer-events:none}
+  #dialogue.on .box{pointer-events:auto;cursor:pointer}
+  #dialogue .who{font-family:"Fraunces";font-style:italic;font-size:12px;color:var(--glow);letter-spacing:.04em;margin-bottom:3px}
+  #dialogue .line{font-size:15px;line-height:1.45;color:#ece2cc;font-weight:400}
+  #dialogue .cont{margin-top:9px;text-align:right;font-family:"Fraunces";letter-spacing:.2em;text-transform:uppercase;
+    font-size:10px;color:var(--accent);animation:pulse 2s infinite}
+
+  .overlay{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+    justify-content:flex-start;padding:34px 30px;text-align:center;opacity:0;visibility:hidden;transition:opacity .9s ease;
+    overflow:hidden auto;scrollbar-width:thin}
+  .overlay>*{flex-shrink:0}
+  /* auto margins center short content but, unlike justify-content:center,
+     let tall content start at the top where it can actually be scrolled to */
+  #title::before,#result::before{content:"";margin-top:auto}
+  #title::after,#result::after{content:"";margin-bottom:auto}
+  .overlay.show{opacity:1;visibility:visible}
+
+  #title{background:linear-gradient(180deg,rgba(8,7,5,.25),rgba(8,7,5,.74))}
+  #title h1{font-family:"Fraunces";font-weight:900;font-size:clamp(58px,18cqw,112px);margin:0;letter-spacing:.05em;line-height:.9;
+    background:linear-gradient(180deg,var(--glow),var(--accent) 55%,#7c5e23);-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 2px 50px rgba(201,162,75,.22)}
+  #title .tag{font-style:italic;color:#cbbfa6;font-size:15px;margin:16px 0 2px;letter-spacing:.03em;max-width:320px}
+  #title .keyline{width:46px;height:1px;background:var(--line);margin:24px auto}
+  .btn{font-family:"Fraunces";font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:13px;color:var(--ink);
+    background:rgba(12,10,7,.4);border:1px solid var(--line);padding:13px 30px;margin:7px;cursor:pointer;transition:.3s;
+    border-radius:1px;pointer-events:auto;min-width:210px;backdrop-filter:blur(2px)}
+  .btn:hover,.btn:active{background:rgba(201,162,75,.14);border-color:var(--accent);color:var(--glow)}
+  .btn.ghost{border-color:rgba(154,144,124,.25);color:var(--dim);font-size:11px;min-width:0;padding:9px 18px}
+  #levelSel{display:grid;grid-template-columns:repeat(5,38px);justify-content:center;gap:6px;margin-top:8px}
+  #levelSel .lv{width:38px;height:38px;padding:0;border:1px solid var(--line);background:rgba(12,10,7,.45);color:var(--dim);
+    font-family:"Fraunces";font-size:13px;cursor:pointer;border-radius:1px;display:flex;align-items:center;justify-content:center;transition:.2s;pointer-events:auto}
+  #levelSel .lv.open:hover,#levelSel .lv.open:focus-visible{border-color:var(--accent);color:var(--glow)}
+  #levelSel .lv.lock{opacity:.28;cursor:default}
+
+  /* top padding keeps scrolled story text clear of the gear button */
+  #story{justify-content:flex-end;padding-top:56px;padding-bottom:58px;background:linear-gradient(180deg,rgba(8,7,5,.05) 26%,rgba(8,7,5,.84) 70%);overflow:hidden}
+  /* the text scrolls inside this wrapper so the Back/Skip buttons stay put */
+  #story .scrollwrap{width:100%;max-height:100%;overflow:hidden auto;scrollbar-width:thin;
+    display:flex;flex-direction:column;align-items:center}
+  #story .scrollwrap>*{flex-shrink:0}
+  #story .inner{max-width:448px;margin-top:auto;opacity:0;transform:translateY(16px);transition:opacity 1s,transform 1s}
+  #story.show .inner{opacity:1;transform:none}
+  #story .chap{font-family:"Fraunces";font-weight:600;letter-spacing:.36em;text-transform:uppercase;font-size:11px;color:var(--accent);margin-bottom:8px}
+  #story .ttl{font-family:"Fraunces";font-weight:600;font-size:32px;line-height:1.04;margin:0 0 16px;color:var(--ink)}
+  #story .who{font-style:italic;color:var(--accent);font-size:14px;margin-bottom:8px;letter-spacing:.03em}
+  #story .body{font-size:16.5px;line-height:1.62;color:#e2d8c3;font-weight:400}
+  #story .body em{color:var(--glow);font-style:italic}
+  #story .body .vox{display:block;font-style:italic;color:#f0e5d0;border-left:2px solid var(--line);padding-left:14px;margin:6px 0}
+  #story .next{margin-top:26px;font-family:"Fraunces";letter-spacing:.2em;text-transform:uppercase;font-size:11px;color:var(--dim);animation:pulse 2.4s infinite}
+  #btnSkip{position:absolute;right:14px;bottom:14px;margin:0}
+  #btnBack{position:absolute;left:14px;bottom:14px;margin:0}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  #result{background:linear-gradient(180deg,rgba(8,7,5,.55),rgba(8,7,5,.9))}
+  #result .rk{font-family:"Fraunces";font-weight:900;font-size:46px;margin:0;letter-spacing:.02em}
+  #result.win .rk{color:var(--glow)} #result.lose .rk{color:#c5543a}
+  #result .msg{font-style:italic;color:#cbbfa6;margin:14px 0 26px;font-size:16px;max-width:360px;line-height:1.5}
+
+  #splash{position:absolute;inset:0;z-index:18;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+  #splash span{font-family:"Fraunces";font-weight:900;font-size:clamp(40px,12cqw,64px);letter-spacing:.3em;color:var(--glow);
+    text-shadow:0 0 60px var(--glow),0 2px 20px rgba(0,0,0,.8)}
+
+  #controls{position:absolute;left:0;right:0;bottom:0;z-index:8;padding:0 18px 26px;display:flex;flex-direction:column;
+    align-items:center;gap:12px;opacity:0;visibility:hidden;transition:opacity .5s}
+  #controls.on{opacity:1;visibility:visible}
+  #hint{font-style:italic;color:#c2b8a2;font-size:13px;text-align:center;min-height:16px;letter-spacing:.02em;transition:color .3s,opacity .3s;
+    text-shadow:0 1px 6px rgba(0,0,0,.85)}
+  @media (hover:hover) and (pointer:fine){ #dialogue{bottom:176px} }
+  #controls.reading #hint{opacity:0}
+  #pushBtn{width:100%;max-width:460px;padding:20px;border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(201,162,75,.14),rgba(12,10,7,.4));border-radius:3px;font-family:"Fraunces";
+    font-weight:600;letter-spacing:.22em;text-transform:uppercase;font-size:14px;color:var(--accent);cursor:pointer;
+    transition:.12s;touch-action:none;backdrop-filter:blur(3px)}
+  #pushBtn.press{background:linear-gradient(180deg,rgba(244,201,105,.34),rgba(201,162,75,.12));color:var(--glow);
+    border-color:var(--accent);transform:translateY(1px);box-shadow:0 0 30px rgba(244,201,105,.2) inset}
+  #selRow{display:flex;gap:8px}
+  .selpin{width:30px;height:6px;border-radius:3px;background:rgba(154,144,124,.35);transition:.2s;cursor:pointer}
+  .selpin.act{background:var(--glow);box-shadow:0 0 10px var(--glow)}
+  .selpin.set{background:var(--accent);opacity:.55}
+  .fadeblack{position:absolute;inset:0;z-index:30;background:#000;opacity:0;pointer-events:none;transition:opacity .6s}
+  .fadeblack.on{opacity:1}
+  #sigil{position:absolute;inset:0;z-index:16;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0}
+  #sigil svg{width:120px;height:120px;filter:drop-shadow(0 0 24px var(--glow))}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bgFx" aria-hidden="true"></div>
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="vig" aria-hidden="true"></div>
+  <canvas id="lock" aria-label="Lock, interactive picking area"></canvas>
+  <div id="grain" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true"></div>
+  <div id="sigil"><svg viewBox="0 0 100 100"><path fill="none" stroke="#ffcf7a" stroke-width="2"
+    d="M50 30 C44 22 30 20 22 30 C32 30 40 34 46 42 C40 46 32 54 30 66 C40 56 46 50 50 46 C54 50 60 56 70 66 C68 54 60 46 54 42 C60 34 68 30 78 30 C70 20 56 22 50 30 Z"/></svg></div>
+  <div id="splash"><span>OPENED</span></div>
+
+  <button id="setBtn" title="Settings" aria-label="Settings" aria-haspopup="dialog">⚙&#xFE0E;</button>
+  <button id="backBtn" title="Back to the chapter text" aria-label="Back to the chapter text">&#9666;</button>
+
+  <div id="settings" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="setpanel">
+      <div class="setttl">Settings</div>
+      <div class="setrow"><span>Music</span><button class="tgl on" id="tglMusic" aria-pressed="true">On</button></div>
+      <div class="volrow"><input type="range" id="volMusic" min="0" max="100" value="80" aria-label="Music volume"><span class="volval" id="volMusicVal">80%</span></div>
+      <div class="setrow"><span>Sound effects</span><button class="tgl on" id="tglSfx" aria-pressed="true">On</button></div>
+      <div class="volrow"><input type="range" id="volSfx" min="0" max="100" value="80" aria-label="Sound effects volume"><span class="volval" id="volSfxVal">80%</span></div>
+      <div class="setkeys">Keyboard: Space holds the pick · &larr; &rarr; choose a pin · Enter continues a message · M mutes all · Esc closes this</div>
+      <div class="setbtns" id="setPlayRow" style="display:none">
+        <button class="btn ghost" id="setRestart">Restart chapter</button>
+        <button class="btn ghost" id="setQuit">Quit to title</button>
+      </div>
+      <button class="btn" id="setDone">Done</button>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div class="hudInfo"><div class="loc" id="hudLoc"></div><div class="sub" id="hudSub"></div></div>
+    <div id="timerWrap"><div id="timer"></div><div id="pins"></div></div>
+  </div>
+
+  <div id="dialogue" role="status" aria-live="polite"><div class="box"><div class="who" id="dWho"></div><div class="line" id="dLine"></div><div class="cont" id="dCont">Continue ▸</div></div></div>
+
+  <div id="controls">
+    <div id="hint" aria-live="polite"></div>
+    <div id="selRow" aria-hidden="true"></div>
+    <div id="pushBtn" role="button" tabindex="0" aria-label="Hold to pick" aria-keyshortcuts="Space">Hold to pick</div>
+  </div>
+
+  <div id="title" class="overlay">
+    <h1>TUMBLER</h1>
+    <div class="tag">In Harrowmere, every name is a key. Hers opens a drowned city.</div>
+    <div class="keyline"></div>
+    <button class="btn" id="btnContinue" style="display:none">Continue</button>
+    <button class="btn" id="btnNew">New Game</button>
+    <button class="btn ghost" id="btnChapters">Chapters</button>
+    <button class="btn ghost" id="btnHow">How to Play</button>
+    <div id="levelSel" style="display:none"></div>
+  </div>
+
+  <div id="story" class="overlay" role="dialog" aria-live="polite">
+    <div class="scrollwrap">
+      <div class="inner">
+        <div class="chap" id="stChap"></div>
+        <h2 class="ttl" id="stTtl"></h2>
+        <div class="who" id="stWho"></div>
+        <div class="body" id="stBody"></div>
+        <div class="next" id="stNext">Tap to continue</div>
+      </div>
+    </div>
+    <button class="btn ghost" id="btnBack" style="display:none">&#9666; Back</button>
+    <button class="btn ghost" id="btnSkip">Skip</button>
+  </div>
+
+  <div id="result" class="overlay" role="dialog" aria-live="assertive">
+    <h2 class="rk" id="rkTtl"></h2>
+    <div class="msg" id="rkMsg"></div>
+    <button class="btn" id="btnAgain">Try Again</button>
+    <button class="btn ghost" id="btnQuit">Abandon</button>
+  </div>
+
+  <div class="fadeblack" id="fade"></div>
+</div>
+
+<script>
+"use strict";
+/* ============== TUMBLER v4 ============== */
+const RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* AI backdrops: drop Gemini images into ./assets/ with the names in each
+   level's img field. Missing files fall back to the painted scenes. */
+const IMAGES_ENABLED = true;
+const IMG_DIR = "assets/";
+
+/* ---------- MUSIC ENGINE ---------- */
+const Music=(()=>{
+  let on=true, iv=null, spec=null, stepN=0, ctxRef=null, gain=null, intensity=1;
+  const SCALES={aeolian:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10],phrygian:[0,1,3,5,7,8,10],lydian:[0,2,4,6,7,9,11]};
+  function bind(ctx,master){ if(gain)return; ctxRef=ctx; gain=ctx.createGain(); gain.gain.value=0.16; gain.connect(master); }
+  function f(m){ return 440*Math.pow(2,(m-69)/12); }
+  function deg(sc,d){ const o=Math.floor(d/7); return sc[((d%7)+7)%7]+12*o; }
+  function pad(midis,dur){ const t=ctxRef.currentTime;
+    midis.forEach(m=>{ [0,0.7].forEach((det,k)=>{ const o=ctxRef.createOscillator(),g=ctxRef.createGain();
+      o.type=k?"sine":"triangle"; o.frequency.value=f(m)+det;
+      g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(0.017,t+dur*0.3);
+      g.gain.linearRampToValueAtTime(0.0001,t+dur*1.05);
+      o.connect(g); g.connect(gain); o.start(t); o.stop(t+dur*1.1); }); }); }
+  function pluck(m){ const t=ctxRef.currentTime,o=ctxRef.createOscillator(),g=ctxRef.createGain();
+    o.type=(spec&&spec.bright)?"sine":"triangle"; o.frequency.value=f(m);
+    g.gain.setValueAtTime(0.045,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+    o.connect(g); g.connect(gain); o.start(t); o.stop(t+0.55); }
+  function bass(m){ const t=ctxRef.currentTime,o=ctxRef.createOscillator(),g=ctxRef.createGain();
+    o.type="sine"; o.frequency.value=f(m);
+    g.gain.setValueAtTime(0.055,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.4);
+    o.connect(g); g.connect(gain); o.start(t); o.stop(t+0.45); }
+  function step(){ if(!spec||!ctxRef||document.hidden)return;
+    const sc=SCALES[spec.scale]||SCALES.aeolian;
+    const bar=Math.floor(stepN/8)%spec.prog.length, inBar=stepN%8, root=spec.root, d=spec.prog[bar];
+    if(inBar===0){ const dur=(60/spec.bpm)*4;
+      pad([root+deg(sc,d),root+deg(sc,d+2),root+deg(sc,d+4)],dur); bass(root-12+deg(sc,d)); }
+    if((spec.pulse||intensity>1) && inBar%2===0 && inBar>0) bass(root-12+deg(sc,d));
+    if(Math.random()<Math.min(0.95,spec.density*intensity)){ const md=d+[0,2,4,7,9][Math.floor(Math.random()*5)]; pluck(root+12+deg(sc,md)); }
+    stepN++; }
+  function schedule(){ if(iv){clearInterval(iv); iv=null;} if(!on||!spec||!ctxRef)return;
+    const half=(60/spec.bpm)/2*1000/intensity; iv=setInterval(step,half); }
+  function start(s){ stop(); spec=s; stepN=0; intensity=1; if(!on||!s||!ctxRef)return;
+    schedule(); step(); }
+  function stop(){ if(iv){clearInterval(iv); iv=null;} }
+  /* raise musical urgency as a timed lock runs out */
+  function tense(v){ const want=v?1.5:1; if(want===intensity)return; intensity=want; if(spec) schedule(); }
+  function setOn(v){ if(on===v)return; on=v; if(!v) stop(); else if(spec) start(spec); }
+  return {bind,start,stop,setOn,tense};
+})();
+
+/* ---------- AUDIO ---------- */
+const Audio2 = (()=> {
+  let ctx=null, master=null, musicBus=null, sfxBus=null, ready=false, amb=null, mv=0.8, sv=0.8;
+  function init(){ if(ready)return; try{
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    master=ctx.createGain(); master.gain.value=1.0; master.connect(ctx.destination);
+    musicBus=ctx.createGain(); musicBus.gain.value=mv; musicBus.connect(master);
+    /* gentle lowpass keeps the effects from biting at the top end */
+    const lp=ctx.createBiquadFilter(); lp.type="lowpass"; lp.frequency.value=4500;
+    sfxBus=ctx.createGain(); sfxBus.gain.value=sv; sfxBus.connect(lp); lp.connect(master);
+    Music.bind(ctx,musicBus); ready=true;
+  }catch(e){} }
+  function setVolumes(m,s){ mv=m; sv=s; if(!ready)return;
+    musicBus.gain.setTargetAtTime(mv,ctx.currentTime,0.05);
+    sfxBus.gain.setTargetAtTime(sv,ctx.currentTime,0.05); }
+  function resume(){ if(ctx&&ctx.state==="suspended") ctx.resume(); }
+  function suspend(){ if(ctx&&ctx.state==="running") ctx.suspend(); }
+  function isReady(){ return ready; }
+  function tick(freq,dur,type,g){ if(!ready)return; const o=ctx.createOscillator(),gn=ctx.createGain();
+    o.type=type||"square"; o.frequency.value=freq; gn.gain.setValueAtTime(g||0.15,ctx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+dur); o.connect(gn); gn.connect(sfxBus);
+    o.start(); o.stop(ctx.currentTime+dur); }
+  function noise(dur,g,freq,type){ if(!ready)return; const n=ctx.sampleRate*dur,buf=ctx.createBuffer(1,n,ctx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+    const s=ctx.createBufferSource(); s.buffer=buf; const f=ctx.createBiquadFilter(); f.type=type||"highpass"; f.frequency.value=freq||900;
+    const gn=ctx.createGain(); gn.gain.value=g||0.2; s.connect(f); f.connect(gn); gn.connect(sfxBus); s.start(); }
+  function startAmbient(p){ stopAmbient(); if(!ready||!p)return; amb={nodes:[]};
+    if(p.drone){ const o1=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain();
+      o1.type="sine"; o2.type="sine"; o1.frequency.value=p.drone; o2.frequency.value=p.drone*1.005;
+      g.gain.value=p.droneG||0.05; o1.connect(g); o2.connect(g); g.connect(musicBus); o1.start(); o2.start(); amb.nodes.push(o1,o2); }
+    if(p.bed){ const bl=ctx.sampleRate*2,buf=ctx.createBuffer(1,bl,ctx.sampleRate),d=buf.getChannelData(0);
+      for(let i=0;i<bl;i++) d[i]=(Math.random()*2-1);
+      const src=ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+      const f=ctx.createBiquadFilter(); f.type=p.bedType||"lowpass"; f.frequency.value=p.bedFreq||600;
+      const g=ctx.createGain(); g.gain.value=p.bedG||0.04;
+      const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=p.lfo||0.15; lg.gain.value=(p.bedG||0.04)*0.5;
+      lfo.connect(lg); lg.connect(g.gain); src.connect(f); f.connect(g); g.connect(musicBus); src.start(); lfo.start();
+      amb.nodes.push(src,lfo); } }
+  function stopAmbient(){ if(amb){ amb.nodes.forEach(n=>{try{n.stop();}catch(e){}}); amb=null; } }
+  return { init, resume, suspend, isReady, setVolumes, startAmbient, stopAmbient,
+    pinSet(){ noise(0.04,0.16,1600); tick(740,0.05,"triangle",0.1); setTimeout(()=>tick(990,0.06,"triangle",0.08),18); hap(12); },
+    move(){ tick(180,0.018,"sawtooth",0.03); },
+    slip(){ tick(160,0.1,"triangle",0.1); noise(0.05,0.07,300); hap(8); },
+    jam(){ tick(90,0.16,"triangle",0.13); hap(40); },
+    crack(){ noise(0.07,0.16,1800); tick(1200,0.05,"triangle",0.07); hap([20,30,20]); },
+    decoy(){ tick(660,0.04,"triangle",0.08); setTimeout(()=>tick(300,0.12,"triangle",0.09),120); hap([10,40,25]); },
+    chime(){ tick(880,0.12,"sine",0.05); setTimeout(()=>tick(1174,0.16,"sine",0.04),90); },
+    ringLock(){ noise(0.05,0.14,1100); tick(520,0.1,"triangle",0.1); setTimeout(()=>tick(780,0.12,"triangle",0.08),60); hap([10,20]); },
+    win(){ [523,659,784,1047].forEach((f2,i)=>setTimeout(()=>tick(f2,0.42,"triangle",0.11),i*90)); hap([20,40,20,60]); },
+    lose(){ [330,247,196].forEach((f2,i)=>setTimeout(()=>tick(f2,0.3,"triangle",0.11),i*120)); hap(80); },
+    intrude(){ noise(0.14,0.12,260); tick(80,0.2,"triangle",0.1); hap([30,20,30]); },
+    thunder(){ noise(0.6,0.06,140,"lowpass"); tick(48,0.7,"sine",0.035); } };
+})();
+function hap(p){ try{ if(navigator.vibrate) navigator.vibrate(p);}catch(e){} }
+
+/* ---------- LEVEL DATA ----------
+   Lock types: "pins" (hold, release in band), "dial" (sweep, release in arc),
+   "gates" (warded rings spin on their own; tap to freeze each gap on the
+   bolt-line at the top). Levels can chain phases. */
+const LEVELS = [
+ { loc:"The Almsbox", sub:"Chapel of Saint Maren, Harrowmere", scene:"chapel", img:"lv01.png",
+   pal:{bg:"radial-gradient(130% 90% at 50% 18%,#2a1d0e,#0c0a06 70%)",accent:"#e0a44a",glow:"#ffcf7a",metal:"#caa05a"},
+   amb:{drone:70,droneG:0.045,bed:true,bedFreq:380,bedG:0.018,lfo:0.1},
+   music:{root:57,scale:"aeolian",bpm:54,prog:[0,5,3,4],density:.18},
+   mech:{timer:0,phases:[{type:"pins",pins:1,tol:.17,rise:.8,fall:1.3}]},
+   tut:"Hold to lift the pin. Let go inside the bright band. You can also press a pin directly.",
+   beats:[
+    {on:"start",who:"Kess, nine years old",text:"A lock is a question. That is what he used to say. You don't force a question. You ask it right, and it answers."},
+    {on:"time",at:12,who:"Kess",text:"Three days without bread. The Watch took the bakery scraps for the Houses' kennels. Even their dogs eat before us."},
+    {on:"allset",who:"Kess",text:"Two coins. Leave one. His rule. He never told me why, and now he never will."} ],
+   intro:[
+    {chap:"Chapter I",ttl:"The Almsbox",
+     body:"Harrowmere drinks the sea a little deeper every year. The Cormorant Houses built it in a hurry, on pilings and rubble, above something they wanted forgotten. When the fog comes in off the water, the old folk say the city below is breathing.\n\nIn the chapel of Saint Maren, a black iron poor-box holds the coins of the faithful. Kess is nine years old. She has not eaten in three days. Around her neck, on a frayed cord, hangs half a brass key that fits no lock she has ever found. It is the only thing her father left behind on the night the Watch came for him."} ],
+   outro:[ {ttl:"A first coin",sigil:true,
+     body:"The box opens with a sound like a small bird landing. She takes two coins and leaves one, because that was his rule.\n\nShe does not see the maker's mark stamped under the lock plate: a small falcon, wings spread, holding perfectly still against the moving air. A kestrel in its hover. The same bird her father drew on everything he ever made.\n\nThe city has a thousand locks like this one. She will come to know them all."} ] },
+
+ { loc:"The Backroom", sub:"Rooke's pawnshop, Gullrow", scene:"pawnshop", img:"lv02.png",
+   pal:{bg:"radial-gradient(120% 90% at 50% 28%,#11281f,#0a0f0c 72%)",accent:"#d8b35a",glow:"#ffe39a",metal:"#b9985a"},
+   amb:{drone:58,droneG:0.045,bed:true,bedFreq:240,bedG:0.014,lfo:0.07},
+   music:{root:55,scale:"dorian",bpm:66,prog:[0,3,5,4],density:.25},
+   mech:{timer:0,phases:[{type:"pins",pins:2,tol:.14,rise:.85,fall:1.4,sequence:true}]},
+   tut:"Set the pins in order, left to right. A pin out of order will not take.",
+   beats:[
+    {on:"start",who:"Rooke",text:"Most people pick a lock the way they argue. All force, no listening. You listen, little hover. That is rarer than you know."},
+    {on:"set",n:1,who:"Rooke",text:"Left to right, always. A lock has an order, and so does a life. The ones who skip steps end up at the gallows or in the Charter Court. Same thing, really."},
+    {on:"time",at:22,who:"Rooke",text:"When you're done there's bread and dripping on the counter. Eat it before the cat does. Growing thieves need feeding."},
+    {on:"allset",who:"Rooke",text:"Good. Very good. Your father had hands like... never mind, sparrow. Old men talk. Forget I said anything."} ],
+   intro:[
+    {chap:"Chapter II",ttl:"The Backroom",
+     body:"Three winters later, the bent nail has become a proper pick, and Kess belongs to Rooke. He is a fence with a velvet voice and a shop full of other people's memories, and he took her off the cobbles the same week her father was hanged. He has never once said why.\n\nThe under-folk of Harrowmere all carry bird names. Kess never asked about that either. Some questions you grow into.",
+     who:"Rooke",vox:"\u201cYou've a gift, little hover. Most people pick a lock. You listen to it.\u201d"} ],
+   outro:[ {ttl:"His order",
+     body:"Each practice case opens in turn, and Rooke watches with an expression caught somewhere between pride and grief.\n\nIn the last case lies a single coin, green with age, stamped with a tower that stands on no street of Harrowmere. When she asks about it, he turns it face down and changes the subject, smooth as oil over water.\n\nShe palms it when he isn't looking. It is the first thing she ever steals from him."} ] },
+
+ { loc:"The Quay Office", sub:"Tideward Quay, midnight rain", scene:"docks", img:"lv03.png",
+   pal:{bg:"linear-gradient(180deg,#0e1a26,#070b10 75%)",accent:"#6fb0c4",glow:"#bfe6f2",metal:"#8aa6b0"},
+   amb:{drone:48,droneG:0.035,bed:true,bedFreq:1200,bedG:0.016,bedType:"bandpass",lfo:0.3},
+   music:{root:50,scale:"dorian",bpm:92,prog:[0,0,5,6],density:.4},
+   mech:{timer:45,phases:[{type:"gates",rings:3,tol:.24,gapW:.6,speedMin:.6,speedMax:1.1}]},
+   tut:"A warded cabinet lock, no pins at all. The rings spin on their own. Tap the moment a ring's gap crosses the golden bolt-line, until all three line up. The clock starts at your first touch.",
+   beats:[
+    {on:"start",who:"Jay",text:"Cabinet's behind the desk, manifests inside. Guard does his loop in about half a minute, and he whistles when he's bored. So listen for the whistling."},
+    {on:"time",at:14,who:"Jay",text:"You know what I love about working with you, Kess? It's the only time this whole rotten city goes quiet."},
+    {on:"half",who:"Jay",text:"The whistling stopped. Kess. The whistling stopped, which means he turned around. Finish it now."},
+    {on:"allset",who:"Jay",text:"And we are gone, like we were never born. First rule of the Tumblers, eh? Fall all you like. Just pull up before the ground."} ],
+   intro:[
+    {chap:"Chapter III",ttl:"The Quay Office",
+     body:"Rain comes in sideways off the black water. Kess is sixteen now, quick and quiet, and tonight she works with Jay, a long streak of grin and loyalty who has watched her back since they were children racing the tide for dropped cargo.\n\nRooke wants the harbourmaster's manifests. He did not say why. Lately, Kess has started noticing how often that is true.",
+     who:"Jay",vox:"\u201cIn and out, like always. We don't get caught. Not us. The gulls will sing songs about us one day, Kess.\u201d"} ],
+   outro:[ {ttl:"Grid Nine",
+     body:"The cabinet clicks. The manifests vanish into Jay's coat, and the two of them melt into the rain, laughing the silent laugh of people who got away clean.\n\nLater, alone, Kess reads what she was never meant to read. Salvage permits, sealed by the Charter Court. Dredging rights for something beneath the harbour, marked only as <em>Grid Nine</em>. The Houses are pulling things up from under the city.\n\nRooke pays them in coin and praise, and files the papers somewhere she never sees."} ] },
+
+ { loc:"The Antiquarian", sub:"Highcrest hill, after midnight", scene:"hall", img:"lv04.png",
+   pal:{bg:"radial-gradient(120% 90% at 50% 24%,#2a2418,#0b0a07 72%)",accent:"#e6c878",glow:"#fff0c0",metal:"#d8c081"},
+   amb:{drone:64,droneG:0.04,bed:true,bedFreq:300,bedG:0.011,lfo:0.05},
+   music:{root:52,scale:"lydian",bpm:72,prog:[0,4,5,3],density:.3},
+   mech:{timer:40,phases:[{type:"pins",pins:3,tol:.105,rise:.95,fall:1.6,sequence:true,tension:true}]},
+   tut:"Fine locks are proud and stiff. Push past the band and the pin binds. Let it settle, then ask again.",
+   beats:[
+    {on:"start",who:"Kess",text:"A collector of drowned things. Half the relics in these cases came up from Grid Nine. Rooke wants one box, only one, and he would not say what is inside it."},
+    {on:"set",n:2,who:"Kess",text:"Wait. That mark on the reliquary lid. The hovering falcon. That is my father's mark. That is my father's mark, on a thing pulled out of the sea."},
+    {on:"time",at:26,who:"Kess",text:"Breathe. He used to hold my hands over the practice pins. Breathe, little hover, he'd say. The lock can hear your heartbeat."},
+    {on:"allset",who:"Kess",text:"Whatever you are, you were his. Which means tonight you are mine. Not Rooke's. Mine."} ],
+   intro:[
+    {chap:"Chapter IV",ttl:"The Antiquarian",
+     body:"The mark is a private collector on Highcrest hill. Marble floors, gold leaf, and case after case of relics dredged from the water beneath Harrowmere. Green bronze, drowned glass, doorplates from streets that no map admits to.\n\nRooke wants a sealed reliquary the size of a bible. These old locks are proud, stiff things. Force them and they bind."} ],
+   outro:[ {ttl:"The letter",sigil:true,
+     body:"Inside the reliquary there is no gold. A roll of waxed cloth. A hand-drawn map of streets that do not exist. And a letter in her father's writing, salt-stained and patient, twelve years old and addressed to her.\n\n<span class='vox'>\u201cIf the wing has found you, little hover, then forgive me its weight. Find the old man in Saltrock who drew the under-roads. And trust no one who feeds you, for they were paid to.\u201d</span>\n\nShe pockets all of it before Rooke can see. It is the first secret she has ever kept from him, and it fits her hand like a key."} ] },
+
+ { loc:"The Strongroom", sub:"Highcrest, the night it turns", scene:"alarm", img:"lv05.png",
+   pal:{bg:"radial-gradient(120% 90% at 50% 42%,#3a0f0c,#0a0504 72%)",accent:"#e0683f",glow:"#ff8a5a",metal:"#c06848"},
+   amb:{drone:96,droneG:0.045,bed:true,bedFreq:800,bedG:0.026,lfo:1.5},
+   music:{root:52,scale:"phrygian",bpm:122,prog:[0,1,0,6],density:.5,pulse:true},
+   mech:{timer:40,phases:[{type:"dial",arcs:3,arcW:.5,sweep:1.5}]},
+   tut:"A dial, not pins. Hold to sweep the needle, release inside the lit arc. Each ring reverses the direction.",
+   beats:[
+    {on:"start",who:"Jay",text:"It's a Charter safe-door, Kess. A dial. Like the practice one in the cellar, remember? Sweep slow, release clean. You could do this asleep."},
+    {on:"time",at:10,who:"Jay",text:"Lanterns on the stair. Kess, there are lanterns on the stair that should not be lit. Somebody knew we were coming tonight. Somebody told them."},
+    {on:"half",who:"Jay",text:"Leave me. Kess, look at me through the bars. Leave me. That is an order from your elder and better."},
+    {on:"allset",who:"Kess",text:"Shut up and run, Jay. One of us gets out, and it was always going to be you. Tell the gulls I said something brave."} ],
+   intro:[
+    {chap:"Chapter V",ttl:"The Strongroom",
+     body:"The second Highcrest job is wrong from the first breath. Lanterns flare where no lanterns should be. Boots on marble, too many, too sure. Someone knew.\n\nJay is trapped behind the strongroom's dial-door with the Watch closing on the stair. Kess has picked pins all her life. A dial is a different question. Not which. When."} ],
+   outro:[ {ttl:"The man on the stair",
+     body:"The door swings. She hurls Jay through it, into the dark and the rain, and then the Watch is on her, and the cold iron, and the hood.\n\nThe last thing she sees, through the closing black, is the top of the stair. A tall figure in a velvet coat, standing among the lanterns, untouched and unhurried. Not running. Counting.\n\nRooke."} ] },
+
+ { loc:"The Cell", sub:"Saltrock Gaol, level minus three", scene:"cell", img:"lv06.png",
+   pal:{bg:"linear-gradient(180deg,#1a1c20,#08090a 78%)",accent:"#8d97a0",glow:"#cdd6dd",metal:"#9aa3aa"},
+   amb:{drone:44,droneG:0.055,bed:true,bedFreq:200,bedG:0.018,lfo:0.04},
+   music:{root:45,scale:"aeolian",bpm:42,prog:[0,5],density:.12},
+   mech:{timer:0,phases:[{type:"pins",pins:3,tol:.10,rise:.8,fall:1.4,shimHP:3,hideBand:true}]},
+   tut:"No light to see the bands. Move slowly and feel for the shimmer. The shim survives two slips. The third snaps it.",
+   beats:[
+    {on:"start",who:"Anselm",text:"Hands that quiet, in the dark, in irons. I know that school of work, child. That is a Warden's touch, or I am even older than I think."},
+    {on:"set",n:1,who:"Anselm",text:"The key at your throat. Let an old man look at it. Oh. Oh, girl. Do you have the first idea what you have been wearing all these years?"},
+    {on:"time",at:32,who:"Anselm",text:"They cut this gaol into the old sea-wall. Listen. At high tide you can hear Sorenne breathing through the stones. The city they drowned still keeps time."},
+    {on:"allset",who:"Anselm",text:"That is a wing. Half of the key that seals the Vault of Names. The last hands that held it belonged to Calder Vane, the last of the Keywrights. They hanged him in the fish market and called it justice."} ],
+   intro:[
+    {chap:"Chapter VI",ttl:"The Cell",
+     body:"Saltrock Gaol is cut into the old sea-wall, so deep that the tide breathes through the stones. They took her picks, her boots, and her name, and gave her a number.\n\nHer only tool is a shim of tin, filed from her cup across nine patient nights. It is thin as a promise. In this dark she cannot see the bands at all. She must ask the lock its question by feel alone."} ],
+   outro:[ {ttl:"The Honest City",
+     body:"The manacles open. In whispers across the cold iron, the old man gives her the truth in pieces, like bread.\n\nHis name is Anselm. He drew maps, once, for the order that kept the Vault of Names, in the city below the city. <em>Sorenne</em>, the Honest City, where every debt, deed, birth and name was kept where all could read it and none could erase it. The Cormorant Houses owed Sorenne more than they could ever repay.\n\nSo they drowned the ledger. And everyone holding it.",
+     who:"Anselm",vox:"\u201cYour father was the last of the Keywrights. And you have carried the Vault's own wing past every guard in Harrowmere, and never known it.\u201d"} ] },
+
+ { loc:"The Drowned Stair", sub:"Below Saltrock, the tide line", scene:"stair", img:"lv07.png",
+   pal:{bg:"radial-gradient(120% 100% at 50% 14%,#101a33,#05070e 74%)",accent:"#7c8fd0",glow:"#cfe0ff",metal:"#8a98c0"},
+   amb:{drone:52,droneG:0.045,bed:true,bedFreq:500,bedG:0.022,lfo:0.5},
+   music:{root:48,scale:"aeolian",bpm:80,prog:[0,6,5,4],density:.3},
+   mech:{timer:50,phases:[{type:"gates",rings:4,tol:.2,gapW:.5,speedMin:.7,speedMax:1.3,surge:true}]},
+   tut:"Salt-bitten warded rings, driven by the current. The surge speeds them and slacks them. Tap each gap onto the bolt-line in the lull, all four must line up.",
+   beats:[
+    {on:"start",who:"Anselm",text:"Through the flood-gate, while the gaol sleeps. The locks down here are salt-bitten and half alive. The tide moves their bones. You cannot force them, child. You catch them."},
+    {on:"time",at:12,who:"Anselm",text:"I will tell you how Sorenne died, since no one living will say it aloud. The storm-gates could only be opened from within. By a Warden's own key."},
+    {on:"half",who:"Anselm",text:"His name was Imre Shrike. A Warden, sworn like all the rest. The Houses bought him, and he turned his key, and the sea did everything after. Forty thousand names, child. One key."},
+    {on:"allset",who:"Anselm",text:"And one Warden stayed below. Aldous Crane went down with his city to seal the Vault, so the truth would outlive the crime. Your line begins with him. Mind which side of that story you stand on. And mind who sent you looking."} ],
+   intro:[
+    {chap:"Chapter VII",ttl:"The Drowned Stair",
+     body:"They go down while the gaol sleeps, through a flooded gate that Anselm alone remembers. A searchlight sweeps the black water. The stair runs below the tide line, into the cold breath of the drowned city.\n\nAnselm's lungs are bad. At the waterline he stops, and presses his life's work into her hands. The under-roads of Sorenne, drawn from memory. Every street he once swore to forget."} ],
+   outro:[ {ttl:"Down",
+     body:"She leaves him at the waterline with his eyes full of a city only he can see.\n\n\u201cI would only weep,\u201d he says, \u201cand the water down there is salt enough already.\u201d\n\nKess goes down alone, past the tide line, past the last of the lamplight, into Sorenne. The towers stand whole in the green dark. Pale fire drifts between them like snow that refuses to fall. It is the most beautiful thing she has ever seen, and it is a graveyard, and her family's name is written somewhere inside it."} ] },
+
+ { loc:"Sorenne", sub:"The drowned city, the craft quarter", scene:"veyra", img:"lv08.png",
+   pal:{bg:"radial-gradient(120% 110% at 50% 58%,#0a2e33,#03100f 72%)",accent:"#3fd0c4",glow:"#9af7ec",metal:"#4fb8b0"},
+   amb:{drone:60,droneG:0.055,bed:true,bedFreq:420,bedG:0.026,lfo:0.2},
+   music:{root:55,scale:"lydian",bpm:58,prog:[0,4,1,5],density:.35,bright:true},
+   mech:{timer:55,phases:[{type:"pins",pins:5,tol:.09,rise:1.0,fall:1.7,sequence:true,tension:true,decoy:3}]},
+   tut:"A century of salt has taught these locks to lie. False bands click, then slip. Only a true catch holds.",
+   beats:[
+    {on:"start",who:"Kess",text:"Streets. Doorways. Washing-lines still strung between the windows. They didn't evacuate this city. They drowned it on a market day."},
+    {on:"set",n:2,who:"Kess",text:"These locks lie. They click like the truth and then they let go. Even the metal down here learned what the Houses taught it."},
+    {on:"time",at:28,who:"Kess",text:"There. The hovering falcon, carved over a workshop door. Every lock in this city was a question, and my father's family wrote half of them."},
+    {on:"allset",who:"Kess",text:"Open nothing for the man who feeds you. You knew, Da. All those years before I was even born, and you already knew."} ],
+   intro:[
+    {chap:"Chapter VIII",ttl:"Sorenne",
+     body:"Sorenne keeps its dead politely. Towers stand intact in the green-black water, lit by drifting clouds of cold fire. Doors stand ajar on rooms where the kettles still sit on the stoves.\n\nThis was the Honest City. One law stood above all others: every debt, deed, birth and name, locked where all could reach it and none could erase it. The Cormorant Houses owed it everything. So it had to drown.\n\nDeep in the craft quarter, under the sign of the hovering falcon, her father's workshop is waiting.",
+     who:"cut deep into the workshop wall, in a steady hand",
+     vox:"\u201cKess. If you are reading this, the wing found you, and I am sorry that I could not. Open nothing for the man who feeds you. He sold our road once and he will sell it twice. Go to the Vault. Open it. Let the city say its own name again.\u201d"} ],
+   outro:[ {ttl:"The seal",sigil:true,
+     body:"At the foot of the wall there is a grave with no body in it. Just a name. <em>CALDER VANE, KEYWRIGHT</em>, cut by his own hand, because he knew that no one else would ever cut it.\n\nBeside it, wrapped in oilcloth, the thing he wanted her to find: the Charter Court's warrant for his hanging. Sworn testimony of an informant. Fee paid in full. Sealed by the broker who sold him.\n\nThe seal is a rook.\n\nShe sits a long time in the drowned city, with her father's death in her hands, and understands at last exactly who has been feeding her."} ] },
+
+ { loc:"The Vault of Names", sub:"The heart of Sorenne", scene:"vault", img:"lv09.png",
+   pal:{bg:"radial-gradient(120% 100% at 50% 34%,#2c2008,#0a0703 72%)",accent:"#e8b94a",glow:"#ffe07a",metal:"#e0c060"},
+   amb:{drone:42,droneG:0.06,bed:true,bedFreq:180,bedG:0.018,lfo:0.06},
+   music:{root:50,scale:"aeolian",bpm:76,prog:[0,3,6,4],density:.35},
+   mech:{timer:50,phases:[{type:"dial",arcs:4,arcW:.36,sweep:1.7,drift:.09,driftSpeed:.7}]},
+   tut:"Four rings, each narrower than the last, and the arcs drift with the water. Patience is the whole craft now.",
+   beats:[
+    {on:"start",who:"Rooke",text:"You found it. Of course you found it. I raised you on questions, little hover. I just never believed you would ask the right one."},
+    {on:"set",n:1,who:"Rooke",text:"Say it, then. Yes. I sold Calder Vane to the Charter Court. My oldest friend. They were going to end the whole Vane line, root and stem and seed. You were the seed."},
+    {on:"time",at:22,who:"Rooke",text:"I gave them your father, and with the change I bought you. Food. Walls. A trade. Hate me with your whole chest if you like, but you are alive to do it. That was the price, and I paid it every day for twelve years."},
+    {on:"allset",who:"Rooke",text:"Your half is open. And here is mine, sparrow. The Houses gave me Shrike's wing to keep buried, the same night I buried your father. No bird flies on one wing."} ],
+   intro:[
+    {chap:"Chapter IX",ttl:"The Vault of Names",
+     body:"The Vault of Names fills the end of a drowned avenue like a brass cathedral laid on its side. Rings within rings, ten thousand teeth, and at its heart a keyway with two mouths.\n\nHer wing turns once, and stops. Half a mechanism. Half an answer.\n\nBehind her, boots on wet stone. Unhurried. A velvet coat that even Sorenne cannot dull.",
+     who:"Rooke",vox:"\u201cI kept you alive, Kess. That was my apology. Twelve years long and paid in bread. Now open the door, and let me close it forever.\u201d"} ],
+   outro:[ {ttl:"One turn more",
+     body:"Ring by ring, her half of the great lock surrenders. The Vault's face splits down the centre. Her side open. His side sealed. The whole truth of a drowned city hanging on one turn more.\n\nRooke steps forward with the second wing raised, and for a single breath he looks almost old.\n\n\u201cGood girl,\u201d he says quietly. \u201cNow watch me bury it.\u201d"} ] },
+
+ { loc:"The Last Lock", sub:"The Vault face, the equinox storm", scene:"storm", img:"lv10.png",
+   pal:{bg:"radial-gradient(120% 100% at 50% 30%,#1c1015,#040305 72%)",accent:"#d9c2c8",glow:"#ffffff",metal:"#c8a86a"},
+   amb:{drone:50,droneG:0.05,bed:true,bedFreq:300,bedG:0.026,lfo:0.8},
+   music:{root:50,scale:"phrygian",bpm:128,prog:[0,1,6,0],density:.55,pulse:true},
+   mech:{timer:115,phases:[
+     {type:"pins",pins:4,tol:.095,rise:1.05,fall:1.8,sequence:true,tension:true,interfere:true,
+      tut:"He will fight you through the brass itself. Set your pins anyway."},
+     {type:"gates",rings:3,tol:.2,gapW:.46,speedMin:.9,speedMax:1.6,surge:true,
+      tut:"Crane's wards, driven by the storm surge. Tap each gap onto the bolt-line."},
+     {type:"dial",arcs:2,arcW:.32,sweep:1.9,
+      tut:"The master ring. Hold to sweep, release inside the arc. Finish what Crane started."} ]},
+   tut:"He will fight you through the brass itself. Set your pins anyway. Then the wards, then the master ring.",
+   beats:[
+    {on:"start",who:"Kess",text:"You taught me a lock is a question, Rooke. So here is mine. What is a city worth, if it has to drown the truth to stand?"},
+    {on:"time",at:16,who:"Rooke",text:"Safe! It is worth SAFE, you stubborn, brilliant child. Names start fires. I have spent thirty years keeping you, and this whole rotten city, out of the smoke."},
+    {on:"set",n:3,who:"Kess",text:"No, Rooke. Not safe. Afraid. I grew up in your house. I know the difference better than anyone alive."},
+    {on:"phase",n:2,who:"Rooke",text:"Wards. Crane's own hand, those rings. He never trusted one question to hold a door. Neither, little hover, do I."},
+    {on:"phase",n:3,who:"Rooke",text:"The master ring. Forty thousand names behind one turn, and the Houses' true ledger crowning the pile. Last chance, little hover. Some doors only open once."},
+    {on:"allset",who:"Kess",text:"Then let this one open."} ],
+   intro:[
+    {chap:"Chapter X",ttl:"The Last Lock",
+     body:"Two wings in one lock now. His turn seals the Vault until the sea outlives the city. Hers opens it. The mechanism cannot serve them both, and Rooke fights her for it through the brass itself, jarring loose every pin she sets, while far above the equinox storm breaks over Harrowmere like a verdict.\n\nOne hundred and seven years ago, on this exact spot, a Warden made the other choice."} ],
+   outro:[ {ttl:"Let it remember",epilogue:true,
+     body:"The master ring turns with a sound like a held breath let go.\n\nNo gold. Shelves. Shelves beyond counting, dry behind brass and glass for a hundred years. Every birth, every debt, every deed, every name the Cormorant Houses drowned, and their own true ledger crowning the stacks like a confession.\n\nRooke's wing drops from his hand. He does not pick it up. \u201cThey will come for you now,\u201d he says. \u201cAll seven Houses.\u201d\n\n\u201cLet them come,\u201d says Kess. \u201cThey will have to read the charges first.\u201d\n\nShe climbs toward the storm with a kestrel hovering at her throat and a city remembering its own name behind her. On a far wharf, a long streak of grin is waiting in the rain, the way he always said he would be.\n\nBy spring, they say, the under-folk of Harrowmere had begun greeting each other with their old names. Out loud. In daylight.\n\n<em>The End</em>"} ] }
+];
+const TITLE_MUSIC={root:57,scale:"aeolian",bpm:50,prog:[0,5,3,4],density:.15};
+const HOWTO_KEY="tumbler_howto_v1";
+const HOWTO=[{chap:"A Thief's Primer",ttl:"How to Play",next:"Tap to return",
+ body:"Harrowmere keeps three kinds of locks, and each asks a different question.\n\n<em>Pin locks</em>: hold to raise the chosen pin, and let go inside the bright band. Tap a pin (or use ← →) to choose which one you work on.\n\n<em>Warded rings</em>: the rings spin on their own. Tap at the right moment to freeze each ring's gap on the golden bolt-line at the top.\n\n<em>Dials</em>: hold to sweep the needle, and release inside the lit arc. The direction reverses with every ring you set.\n\nPeople will speak to you while you work. The lock waits while you read, and the clock holds; tap anywhere, or press Enter, to go on. Sound, volume, restarting, and the keyboard controls live behind the small gear at the top of the screen."}];
+
+/* ---------- DOM / STATE ---------- */
+const $=id=>document.getElementById(id);
+const cv=$("lock"), ctx2=cv.getContext("2d");
+const sc=$("scene"), sx=sc.getContext("2d");
+const elBg=$("bgFx"),elHud=$("hud"),elLoc=$("hudLoc"),elSub=$("hudSub"),elTimer=$("timer"),elPins=$("pins"),
+  elCtrls=$("controls"),elPush=$("pushBtn"),elHint=$("hint"),elSel=$("selRow"),elFlash=$("flash"),elFade=$("fade"),
+  elDlg=$("dialogue"),elDWho=$("dWho"),elDLine=$("dLine"),elSigil=$("sigil");
+
+let DPR=1,W=0,H=0;
+const SAVE_KEY="tumbler_progress_v2";
+let unlocked=loadProgress();
+let state="title", levelIdx=0, lock=null, lastT=0;
+let currentScene="title", sceneImg="title.png", curPal=null;
+let muted=false, curMusicSpec=null, curAmbSpec=null;
+function loadProgress(){ try{return Math.max(1,parseInt(localStorage.getItem(SAVE_KEY))||1);}catch(e){return 1;} }
+function saveProgress(n){ unlocked=Math.max(unlocked,n); try{localStorage.setItem(SAVE_KEY,String(unlocked));}catch(e){} }
+
+function resize(){ const r=$("app").getBoundingClientRect(); DPR=Math.min(2,window.devicePixelRatio||1); W=r.width; H=r.height;
+  [cv,sc].forEach(c=>{ c.width=W*DPR; c.height=H*DPR; }); ctx2.setTransform(DPR,0,0,DPR,0,0); sx.setTransform(DPR,0,0,DPR,0,0);
+  SCN.store={}; }
+window.addEventListener("resize",resize);
+
+function hexA(hex,a){ if(hex[0]!=="#")return hex; const n=parseInt(hex.slice(1),16);
+  return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+a+")"; }
+function roundRect(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath(); c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function glow(c,x,y,r,col,a){ const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,hexA(col,a)); g.addColorStop(1,hexA(col,0)); c.fillStyle=g; c.fillRect(x-r,y-r,r*2,r*2); }
+function poly(c,pts){ c.beginPath(); c.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<pts.length;i++)c.lineTo(pts[i][0],pts[i][1]); c.closePath(); }
+function angDist(a,b){ const T=Math.PI*2; let d=(a-b)%T; if(d>Math.PI)d-=T; if(d<-Math.PI)d+=T; return Math.abs(d); }
+
+/* ---------- IMAGE LAYER ---------- */
+const ImgCache={};
+function getImg(name){ if(!name||!IMAGES_ENABLED) return null;
+  let e=ImgCache[name];
+  if(!e){ e=ImgCache[name]={img:new Image(),ok:false,fail:false};
+    e.img.onload=()=>{e.ok=true;}; e.img.onerror=()=>{e.fail=true;}; e.img.src=IMG_DIR+name; }
+  return e; }
+function drawImageCover(img,t){ const iw=img.naturalWidth,ih=img.naturalHeight; if(!iw)return;
+  const base=Math.max(W/iw,H/ih); const k=RM?1.02:(1.05+Math.sin(t*0.00012)*0.02);
+  const s=base*k, dw=iw*s, dh=ih*s;
+  const dx=(W-dw)/2+(RM?0:Math.sin(t*0.00008)*8), dy=(H-dh)/2+(RM?0:Math.cos(t*0.00009)*6);
+  sx.drawImage(img,dx,dy,dw,dh); }
+function legibility(){ const g=sx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"rgba(0,0,0,.38)"); g.addColorStop(.3,"rgba(0,0,0,.06)");
+  g.addColorStop(.62,"rgba(0,0,0,.18)"); g.addColorStop(1,"rgba(0,0,0,.72)");
+  sx.fillStyle=g; sx.fillRect(0,0,W,H);
+  if(curPal){ sx.fillStyle=hexA(curPal.accent,0.05); sx.fillRect(0,0,W,H); } }
+
+/* ---------- SCENES ---------- */
+const SCN={ key:null, store:{} };
+function scnInit(key){ SCN.key=key; SCN.store={}; }
+function P(name,make){ if(!SCN.store[name]) SCN.store[name]=make(); return SCN.store[name]; }
+function cnt(n){ return Math.max(4,Math.ceil(n*(RM?0.4:1))); }
+
+function stormBolt(t){ const L=SCENES._light||(SCENES._light={a:0});
+  if(Math.random()<0.006 && L.a<=0){ L.a=1; Audio2.thunder();
+    L.path=[]; let x=W*(0.2+Math.random()*0.6),y=0; for(;y<H;y+=H/8){ x+=(Math.random()-0.5)*60; L.path.push([x,y]); } }
+  if(L.a>0){ sx.save(); sx.globalAlpha=L.a; sx.fillStyle="rgba(220,230,255,0.08)"; sx.fillRect(0,0,W,H);
+    sx.strokeStyle="rgba(230,238,255,"+L.a+")"; sx.lineWidth=2; sx.beginPath();
+    if(L.path){ sx.moveTo(L.path[0][0],L.path[0][1]); L.path.forEach(p=>sx.lineTo(p[0],p[1])); } sx.stroke(); sx.restore();
+    L.a-=0.04; } }
+
+const SCENES={
+ title(t){ const cx=W/2, cy=H*0.34;
+   glow(sx,cx,cy,Math.min(W,H)*0.5,"#caa05a",0.10);
+   for(let i=0;i<4;i++){ const y=H*0.4+i*40+Math.sin(t*0.0003+i)*10;
+     sx.fillStyle=hexA("#caa05a",0.03); sx.fillRect(0,y,W,26); }
+   sx.save(); sx.translate(cx,cy+Math.sin(t*0.0008)*6);
+   sx.strokeStyle=hexA("#e8c879",0.5); sx.lineWidth=3;
+   sx.beginPath(); sx.arc(0,-30,16,0,Math.PI*2); sx.stroke();
+   sx.beginPath(); sx.arc(0,-30,7,0,Math.PI*2); sx.stroke();
+   sx.beginPath(); sx.moveTo(0,-14); sx.lineTo(0,46); sx.lineTo(10,46); sx.moveTo(0,34); sx.lineTo(8,34); sx.stroke();
+   glow(sx,0,-30,40,"#ffcf7a",0.25); sx.restore();
+   motes(t,40,"#e8c879"); },
+ chapel(t){ const cx=W/2;
+   sx.fillStyle=hexA("#1c1206",0.9); poly(sx,[[cx-90,H*0.78],[cx-90,H*0.30],[cx,H*0.16],[cx+90,H*0.30],[cx+90,H*0.78]]); sx.fill();
+   glow(sx,cx,H*0.34,120,"#e0a44a",0.18);
+   sx.strokeStyle=hexA("#caa05a",0.4); sx.lineWidth=2;
+   for(let i=-1;i<=1;i++){ sx.beginPath(); sx.moveTo(cx+i*26,H*0.5); sx.lineTo(cx+i*26,H*0.28); sx.stroke(); }
+   sx.beginPath(); sx.moveTo(cx-40,H*0.5); sx.lineTo(cx+40,H*0.5); sx.stroke();
+   const fx=W*0.22, fy=H*0.74, fl=Math.sin(t*0.012)*2;
+   glow(sx,fx,fy-14,70+Math.sin(t*0.01)*8,"#ffcf7a",0.4);
+   sx.fillStyle="#3a2a14"; sx.fillRect(fx-4,fy,8,40);
+   sx.fillStyle="#ffd98a"; poly(sx,[[fx,fy-22+fl],[fx-4,fy-6],[fx+4,fy-6]]); sx.fill();
+   motes(t,26,"#ffcf7a"); },
+ pawnshop(t){ sx.fillStyle=hexA("#0c1410",0.85); sx.fillRect(0,H*0.2,W,H*0.62);
+   sx.strokeStyle=hexA("#b9985a",0.22); sx.lineWidth=2;
+   for(let r=0;r<4;r++){ const y=H*0.30+r*H*0.13; sx.beginPath(); sx.moveTo(W*0.12,y); sx.lineTo(W*0.88,y); sx.stroke();
+     for(let k=0;k<6;k++){ const x=W*0.16+k*(W*0.68/5); sx.fillStyle=hexA("#1a2a20",0.9); sx.fillRect(x-9,y-18,18,18); } }
+   for(let k=0;k<5;k++){ const x=W*0.2+k*(W*0.6/4), y=H*0.24+Math.sin(t*0.001+k)*3;
+     sx.strokeStyle=hexA("#d8b35a",0.5); sx.lineWidth=2.5; sx.beginPath(); sx.arc(x,y,7,Math.PI,0); sx.stroke();
+     sx.fillStyle=hexA("#d8b35a",0.6); roundRect(sx,x-7,y,14,12,2); sx.fill(); }
+   glow(sx,W*0.78,H*0.30,90+Math.sin(t*0.008)*10,"#ffe39a",0.22);
+   motes(t,20,"#d8b35a"); },
+ docks(t){ sx.fillStyle=hexA("#0a141d",0.9); sx.fillRect(0,H*0.6,W,H*0.4);
+   sx.strokeStyle=hexA("#8aa6b0",0.3); sx.lineWidth=3;
+   [0.2,0.42,0.7,0.86].forEach(p=>{ const x=W*p; sx.beginPath(); sx.moveTo(x,H*0.6); sx.lineTo(x-8,H*0.22); sx.stroke();
+     sx.beginPath(); sx.moveTo(x-26,H*0.34); sx.lineTo(x+14,H*0.34); sx.stroke(); });
+   const lx=W*0.3,ly=H*0.4+Math.sin(t*0.002)*4; glow(sx,lx,ly,80,"#bfe6f2",0.22);
+   sx.fillStyle=hexA("#bfe6f2",0.5); roundRect(sx,lx-6,ly-8,12,16,2); sx.fill();
+   sx.strokeStyle=hexA("#6fb0c4",0.18); sx.lineWidth=1;
+   for(let i=0;i<6;i++){ const y=H*0.66+i*16; sx.beginPath();
+     for(let x=0;x<=W;x+=18) sx.lineTo(x,y+Math.sin(x*0.05+t*0.003+i)*3); sx.stroke(); }
+   rain(t,90,"#bfe6f2",0.4); },
+ hall(t){ sx.fillStyle=hexA("#15110a",0.85); sx.fillRect(0,H*0.18,W,H*0.64);
+   [0.16,0.34,0.66,0.84].forEach(p=>{ const x=W*p; sx.fillStyle=hexA("#2a2418",0.9); sx.fillRect(x-12,H*0.2,24,H*0.56);
+     sx.fillStyle=hexA("#d8c081",0.18); sx.fillRect(x-12,H*0.2,4,H*0.56); });
+   const px=W/2, py=H*0.56; glow(sx,px,py-30,90+Math.sin(t*0.006)*10,"#fff0c0",0.22);
+   sx.fillStyle=hexA("#1a160d",0.95); sx.fillRect(px-26,py,52,40);
+   const a=0.5+Math.sin(t*0.004)*0.3; sx.save(); sx.translate(px,py-26); sx.scale(0.6,0.6);
+   sx.fillStyle=hexA("#ffe6a0",a); drawKestrel(sx); sx.restore();
+   motes(t,18,"#e6c878"); },
+ alarm(t){ const pulse=0.5+Math.abs(Math.sin(t*0.006))*0.5;
+   sx.fillStyle=hexA("#160604",0.85); sx.fillRect(0,H*0.18,W,H*0.64);
+   glow(sx,W*0.5,H*0.3,W*0.6,"#e0683f",0.16*pulse);
+   sx.fillStyle=hexA("#2a0d0a",0.9); poly(sx,[[W*0.7,H*0.2],[W,H*0.2],[W,H*0.5],[W*0.78,H*0.5]]); sx.fill();
+   sx.fillStyle=hexA("#000",0.85); const gx=W*0.86;
+   poly(sx,[[gx-12,H*0.22],[gx+12,H*0.22],[gx+10,H*0.4],[gx-10,H*0.4]]); sx.fill();
+   sx.beginPath(); sx.arc(gx,H*0.2,9,0,Math.PI*2); sx.fill();
+   sx.save(); sx.globalAlpha=0.12*pulse; sx.fillStyle="#ff8a5a";
+   sx.translate(W*0.3,H*0.24); sx.rotate(Math.sin(t*0.004)*0.5); poly(sx,[[0,0],[W*0.9,-40],[W*0.9,40]]); sx.fill(); sx.restore();
+   motes(t,14,"#e0683f"); },
+ cell(t){ sx.fillStyle=hexA("#0c0e10",0.9); sx.fillRect(0,H*0.18,W,H*0.64);
+   sx.save(); sx.globalAlpha=0.14; const g=sx.createLinearGradient(W*0.5,H*0.18,W*0.42,H*0.74);
+   g.addColorStop(0,"#cdd6dd"); g.addColorStop(1,"rgba(205,214,221,0)"); sx.fillStyle=g;
+   poly(sx,[[W*0.44,H*0.18],[W*0.6,H*0.18],[W*0.52,H*0.74],[W*0.4,H*0.74]]); sx.fill(); sx.restore();
+   sx.strokeStyle=hexA("#9aa3aa",0.35); sx.lineWidth=4;
+   for(let k=0;k<7;k++){ const x=W*0.12+k*(W*0.76/6); sx.beginPath(); sx.moveTo(x,H*0.2); sx.lineTo(x,H*0.74); sx.stroke(); }
+   sx.fillStyle=hexA("#000",0.6); const cx=W*0.82;
+   poly(sx,[[cx-14,H*0.42],[cx+14,H*0.42],[cx+11,H*0.72],[cx-11,H*0.72]]); sx.fill();
+   sx.beginPath(); sx.arc(cx,H*0.4,10,0,Math.PI*2); sx.fill();
+   const dy=(t*0.12)%(H*0.5); sx.fillStyle=hexA("#cdd6dd",0.4); sx.fillRect(W*0.5,H*0.2+dy,2,8);
+   motes(t,12,"#cdd6dd"); },
+ stair(t){ for(let i=0;i<7;i++){ const y=H*0.3+i*H*0.06, w=W*(0.3+i*0.06);
+     sx.fillStyle=hexA("#0a1020",0.8); sx.fillRect(W/2-w/2,y,w,H*0.05); }
+   const wl=H*0.68; sx.fillStyle=hexA("#101a33",0.6); sx.fillRect(0,wl,W,H-wl);
+   sx.strokeStyle=hexA("#7c8fd0",0.2);
+   for(let i=0;i<5;i++){ const y=wl+i*14; sx.beginPath(); for(let x=0;x<=W;x+=16)sx.lineTo(x,y+Math.sin(x*0.04+t*0.003+i)*3); sx.stroke(); }
+   sx.save(); sx.translate(W*0.5,H*0.1); sx.rotate(Math.sin(t*0.0012)*0.6);
+   sx.globalAlpha=0.10; const g=sx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#cfe0ff"); g.addColorStop(1,"rgba(207,224,255,0)");
+   sx.fillStyle=g; poly(sx,[[-30,0],[30,0],[120,H],[-120,H]]); sx.fill(); sx.restore();
+   glow(sx,W*0.5,H*0.1,60,"#cfe0ff",0.2);
+   motes(t,18,"#7c8fd0"); },
+ veyra(t){ sx.fillStyle=hexA("#041815",0.7); sx.fillRect(0,0,W,H);
+   const towers=P("vtow",()=>{ const a=[]; for(let i=0;i<7;i++) a.push({x:W*(0.1+i*0.13),w:18+Math.random()*22,h:H*(0.3+Math.random()*0.35)}); return a; });
+   towers.forEach(tw=>{ sx.fillStyle=hexA("#062a28",0.9); sx.fillRect(tw.x-tw.w/2,H*0.8-tw.h,tw.w,tw.h);
+     sx.fillStyle=hexA("#9af7ec",0.25+Math.sin(t*0.002+tw.x)*0.15);
+     for(let r=0;r<4;r++) sx.fillRect(tw.x-3,H*0.8-tw.h+10+r*22,6,8); });
+   glow(sx,W*0.5,H*0.5,W*0.55,"#3fd0c4",0.10);
+   biolum(t,34); },
+ vault(t){ const cx=W/2, cy=H*0.46, R=Math.min(W,H)*0.42;
+   glow(sx,cx,cy,R*1.1,"#e8b94a",0.10);
+   for(let i=5;i>=1;i--){ sx.beginPath(); sx.arc(cx,cy,R*i/5,0,Math.PI*2);
+     sx.strokeStyle=hexA("#e0c060",0.12+0.05*i); sx.lineWidth=2; sx.stroke(); }
+   sx.save(); sx.translate(cx,cy); sx.rotate(t*0.0002);
+   for(let k=0;k<24;k++){ sx.rotate(Math.PI*2/24); sx.fillStyle=hexA("#e8b94a",0.18); sx.fillRect(R*0.78,-3,12,6); } sx.restore();
+   sx.fillStyle=hexA("#0a0703",0.9); sx.beginPath(); sx.arc(cx,cy-6,14,0,Math.PI*2); sx.fill();
+   poly(sx,[[cx-7,cy+2],[cx+7,cy+2],[cx+12,cy+34],[cx-12,cy+34]]); sx.fill();
+   glow(sx,cx,cy,30,"#ffe07a",0.2);
+   motes(t,16,"#e8b94a"); },
+ storm(t){ sx.fillStyle=hexA("#0a0608",0.7); sx.fillRect(0,0,W,H);
+   const cx=W/2,cy=H*0.46,R=Math.min(W,H)*0.4;
+   sx.strokeStyle=hexA("#c8a86a",0.18); sx.lineWidth=2;
+   for(let i=3;i>=1;i--){ sx.beginPath(); sx.arc(cx,cy,R*i/3,0,Math.PI*2); sx.stroke(); }
+   sx.beginPath(); sx.moveTo(cx,cy-R); sx.lineTo(cx,cy+R); sx.strokeStyle=hexA("#c8a86a",0.25); sx.stroke();
+   stormBolt(t);
+   rain(t,120,"#c9c2d0",0.45); },
+ epilogue(t){ glow(sx,W*0.5,H*0.18,W*0.5,"#ffffff",0.10);
+   sx.save(); sx.globalAlpha=0.12; const g=sx.createLinearGradient(W*0.5,0,W*0.5,H);
+   g.addColorStop(0,"#fff"); g.addColorStop(1,"rgba(255,255,255,0)"); sx.fillStyle=g;
+   poly(sx,[[W*0.4,0],[W*0.6,0],[W*0.56,H],[W*0.44,H]]); sx.fill(); sx.restore();
+   sx.fillStyle=hexA("#000",0.7); const wx=W*0.5,wy=H*0.6;
+   poly(sx,[[wx-10,wy],[wx+10,wy],[wx+7,wy+70],[wx-7,wy+70]]); sx.fill();
+   sx.beginPath(); sx.arc(wx,wy-8,9,0,Math.PI*2); sx.fill();
+   const a=0.6+Math.sin(t*0.004)*0.3; sx.save(); sx.translate(wx,wy+6); sx.scale(0.34,0.34);
+   sx.fillStyle=hexA("#ffcf7a",a); drawKestrel(sx); sx.restore(); glow(sx,wx,wy+6,18,"#ffcf7a",a*0.5);
+   sx.fillStyle=hexA("#000",0.4); sx.fillRect(W*0.84,H*0.66,5,18); sx.beginPath(); sx.arc(W*0.845,H*0.64,4,0,Math.PI*2); sx.fill();
+   motes(t,20,"#ffffff"); }
+};
+function drawKestrel(c){ c.beginPath();
+  c.moveTo(0,-20); c.bezierCurveTo(-6,-28,-20,-30,-28,-20); c.bezierCurveTo(-18,-20,-10,-16,-4,-8);
+  c.bezierCurveTo(-10,-4,-18,4,-20,16); c.bezierCurveTo(-10,6,-4,0,0,-4);
+  c.bezierCurveTo(4,0,10,6,20,16); c.bezierCurveTo(18,4,10,-4,4,-8);
+  c.bezierCurveTo(10,-16,18,-20,28,-20); c.bezierCurveTo(20,-30,6,-28,0,-20); c.closePath(); c.fill(); }
+function motes(t,count,col){ count=cnt(count);
+  const ps=P("motes_"+SCN.key,()=>{ const a=[]; for(let i=0;i<count;i++)
+    a.push({x:Math.random()*W,y:Math.random()*H,s:0.2+Math.random()*0.5,r:0.6+Math.random()*1.6}); return a; });
+  ps.forEach(p=>{ p.y-=p.s; p.x+=Math.sin((t*0.0005)+p.y*0.02)*0.3; if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
+    sx.fillStyle=hexA(col,0.25); sx.beginPath(); sx.arc(p.x,p.y,p.r,0,Math.PI*2); sx.fill(); }); }
+function biolum(t,count){ count=cnt(count);
+  const ps=P("bio",()=>{ const a=[]; for(let i=0;i<count;i++)
+    a.push({x:Math.random()*W,y:Math.random()*H,s:0.15+Math.random()*0.35,ph:Math.random()*6,r:1+Math.random()*2}); return a; });
+  ps.forEach(p=>{ p.y-=p.s; if(p.y<-4){p.y=H+4;p.x=Math.random()*W;} const a=0.3+Math.sin(t*0.002+p.ph)*0.25;
+    sx.fillStyle=hexA("#9af7ec",Math.max(0,a)); sx.beginPath(); sx.arc(p.x,p.y,p.r,0,Math.PI*2); sx.fill(); }); }
+function rain(t,count,col,a){ count=cnt(count);
+  const ps=P("rain",()=>{ const r=[]; for(let i=0;i<count;i++)
+    r.push({x:Math.random()*W,y:Math.random()*H,v:6+Math.random()*8,l:10+Math.random()*14}); return r; });
+  sx.strokeStyle=hexA(col,a*0.5); sx.lineWidth=1;
+  ps.forEach(p=>{ p.y+=p.v; p.x+=p.v*0.25; if(p.y>H){p.y=-10;p.x=Math.random()*W;}
+    sx.beginPath(); sx.moveTo(p.x,p.y); sx.lineTo(p.x-p.l*0.25,p.y-p.l); sx.stroke(); }); }
+
+const WEATHER={ chapel:t=>motes(t,26,"#ffcf7a"), pawnshop:t=>motes(t,20,"#d8b35a"),
+ docks:t=>rain(t,90,"#bfe6f2",0.4), hall:t=>motes(t,18,"#e6c878"), alarm:t=>motes(t,14,"#e0683f"),
+ cell:t=>motes(t,12,"#cdd6dd"), stair:t=>motes(t,18,"#7c8fd0"), veyra:t=>biolum(t,34),
+ vault:t=>motes(t,16,"#e8b94a"), storm:t=>{ stormBolt(t); rain(t,120,"#c9c2d0",0.45); },
+ epilogue:t=>motes(t,20,"#ffffff"), title:t=>motes(t,40,"#e8c879") };
+
+function drawScene(key,t){ sx.clearRect(0,0,W,H);
+  const e=getImg(sceneImg);
+  if(e && e.ok){ drawImageCover(e.img,t); const w=WEATHER[key]; if(w)w(t); legibility(); }
+  else { const f=SCENES[key]; if(f)f(t); } }
+
+/* ---------- LOCK ENGINE (multi-mechanic, multi-phase) ---------- */
+const KEY_A=-Math.PI/2; /* the bolt-line: gates gaps must align here */
+function makeLock(cfg){
+  const L={cfg,phases:cfg.mech.phases,pi:0,time:cfg.mech.timer||0,started:false,done:false,failed:false,
+    elapsed:0,setCount:0,halfFired:false,firedBeats:{},intrudeT:5.5,intrudeFlash:0,transition:false,
+    paused:false,winPending:false};
+  buildPhase(L); return L;
+}
+function buildPhase(L){
+  const ph=L.phases[L.pi]; L.ph=ph; L.type=ph.type;
+  L.pins=null; L.arcs=null; L.rings=null; L.holding=false;
+  if(ph.type==="pins"){
+    L.pins=[]; L.sel=0; L.shim=ph.shimHP||0;
+    for(let i=0;i<ph.pins;i++){
+      const p={target:.36+Math.random()*.44,tol:ph.tol,h:0,set:false,jam:0,
+        phase:Math.random()*Math.PI*2,decoy:false,decoyTarget:0,falseTimer:0,setAt:-99,wasIn:false};
+      L.pins.push(p);
+    }
+    if(ph.decoy){ const idxs=[...Array(ph.pins).keys()].sort(()=>Math.random()-.5).slice(0,ph.decoy);
+      idxs.forEach(i=>{ L.pins[i].decoy=true; let dt,tries=0;
+        do{dt=.08+Math.random()*.84; tries++;}while(tries<60 && Math.abs(dt-L.pins[i].target)<ph.tol*3.2);
+        if(Math.abs(dt-L.pins[i].target)<ph.tol*3.2) dt=L.pins[i].target>.5?.1:.9;
+        L.pins[i].decoyTarget=dt; }); }
+  }
+  if(ph.type==="dial"){
+    L.arcs=[]; L.needle=-Math.PI/2; L.dir=1;
+    let last=L.needle;
+    for(let i=0;i<ph.arcs;i++){ let c,tries=0;
+      do{ c=Math.random()*Math.PI*2; tries++; }while(tries<40 && angDist(c,last)<0.9);
+      L.arcs.push({c0:c,c:c,w:ph.arcW,locked:false}); last=c; }
+  }
+  if(ph.type==="gates"){
+    L.rings=[];
+    for(let i=0;i<ph.rings;i++){
+      const dir=i%2===0?1:-1;
+      const sp=((ph.speedMin||0.7)+Math.random()*((ph.speedMax||1.4)-(ph.speedMin||0.7)))*dir;
+      L.rings.push({ang:Math.random()*Math.PI*2,w:ph.gapW||0.55,speed:sp,frozen:false,wasIn:false});
+    }
+  }
+}
+function applyPhaseUI(L){
+  elPush.textContent = L.type==="dial" ? "Hold to turn" : (L.type==="gates" ? "Tap to catch" : "Hold to pick");
+  elPush.setAttribute("aria-label",elPush.textContent);
+  elHint.textContent = L.ph.tut || L.cfg.tut;
+  buildSel(L);
+}
+function unitCount(L){ return L.type==="dial" ? L.arcs.length : (L.type==="gates" ? L.rings.length : L.pins.length); }
+function unitsDone(L){ return L.type==="dial" ? L.arcs.filter(a=>a.locked).length :
+  (L.type==="gates" ? L.rings.filter(r=>r.frozen).length : L.pins.filter(p=>p.set).length); }
+function phaseAllSet(L){ return unitsDone(L)>=unitCount(L); }
+function nextRequired(L){ if(!L.pins)return -1; for(let i=0;i<L.pins.length;i++) if(!L.pins[i].set) return i; return -1; }
+function advanceSel(L){ if(!L.pins)return; let nxt=-1;
+  if(L.ph.sequence) nxt=nextRequired(L);
+  else { for(let k=1;k<=L.pins.length;k++){ const j=(L.sel+k)%L.pins.length; if(!L.pins[j].set){nxt=j;break;} } }
+  if(nxt>=0){ L.sel=nxt; refreshSel(); } }
+
+function selectPin(L,i){ if(L.paused||L.holding||!L.pins||i<0||i>=L.pins.length)return; L.sel=i; Audio2.move(); refreshSel(); }
+
+function startHold(L){ if(L.done||L.transition||L.paused)return; L.started=true;
+  if(L.type==="gates"){ gateCatch(L);
+    elPush.classList.add("press"); setTimeout(()=>elPush.classList.remove("press"),120); return; }
+  if(L.type==="pins"){ const p=L.pins[L.sel]; if(p.set)return; }
+  L.holding=true; elPush.classList.add("press"); }
+function releaseHold(L){ if(!L.holding)return; L.holding=false; elPush.classList.remove("press");
+  if(L.done||L.transition||L.paused)return;
+  if(L.type==="pins") pinsRelease(L);
+  else if(L.type==="dial") dialRelease(L); }
+
+function pinsRelease(L){
+  const p=L.pins[L.sel]; if(p.set)return;
+  if(L.ph.sequence){ const need=nextRequired(L); if(L.sel!==need){ Audio2.slip(); return; } }
+  if(p.decoy && Math.abs(p.h-p.decoyTarget)<=p.tol){ p.falseTimer=0.7; Audio2.decoy(); setHint(L,"That one lied. Wait for it..."); return; }
+  const eff=(p.curTarget!==undefined?p.curTarget:p.target);
+  if(Math.abs(p.h-eff)<=p.tol){ setUnit(L,p,eff); }
+  else Audio2.slip(); }
+
+function gateCatch(L){
+  const r=L.rings.find(g=>!g.frozen); if(!r)return;
+  if(angDist(r.ang,KEY_A)<=L.ph.tol){
+    r.frozen=true; r.ang=KEY_A;
+    Audio2.ringLock(); L.setCount++; fireBeat(L,"set",L.setCount);
+    refreshSel(); updateHud(L);
+    if(phaseAllSet(L)) phaseComplete(L);
+  } else { L.missT=0.3; Audio2.slip(); hap(10); } }
+
+function setUnit(L,p,eff){
+  p.set=true; p.h=eff; p.falseTimer=0; p.setAt=L.elapsed;
+  Audio2.pinSet(); L.setCount++; fireBeat(L,"set",L.setCount);
+  advanceSel(L); refreshSel(); updateHud(L);
+  if(phaseAllSet(L)) phaseComplete(L); }
+
+function dialRelease(L){
+  const arc=L.arcs.find(a=>!a.locked); if(!arc)return;
+  if(angDist(L.needle,arc.c)<=arc.w/2){
+    arc.locked=true; arc.c=L.needle; L.dir*=-1;
+    Audio2.ringLock(); L.setCount++; fireBeat(L,"set",L.setCount);
+    refreshSel(); updateHud(L);
+    if(phaseAllSet(L)) phaseComplete(L);
+  } else Audio2.slip(); }
+
+function phaseComplete(L){
+  if(L.pi<L.phases.length-1){
+    L.transition=true; Audio2.chime(); Audio2.pinSet(); flashScreen(.22);
+    fireBeat(L,"phase",L.pi+2);
+    setTimeout(()=>{ L.pi++; buildPhase(L); applyPhaseUI(L); L.transition=false; refreshSel(); updateHud(L); },1300);
+  } else winLock(L); }
+
+function updateLock(L,dt){ if(L.done||L.paused)return; L.elapsed+=dt;
+  fireTimeBeats(L);
+  if(L.cfg.mech.timer && L.started){ L.time-=dt;
+    if(!L.halfFired && L.time<=L.cfg.mech.timer*0.5){ L.halfFired=true; fireBeat(L,"half"); }
+    if(!L.tenseFired && L.time<=10){ L.tenseFired=true; if(!muted) Music.tense(true); }
+    if(L.time<=0){ L.time=0; failLock(L,"time"); return; } }
+  if(L.transition) return;
+  if(L.type==="dial"){
+    const ph=L.ph;
+    if(ph.drift){ L.arcs.forEach((a,i)=>{ if(!a.locked) a.c=a.c0+Math.sin(L.elapsed*(ph.driftSpeed||0.7)+i*1.7)*ph.drift; }); }
+    if(L.holding){ L.needle=(L.needle + L.dir*ph.sweep*dt) % (Math.PI*2); }
+    return; }
+  if(L.type==="gates"){
+    if(L.missT>0) L.missT-=dt;
+    L.rings.forEach((r,i)=>{ if(r.frozen)return;
+      let sp=r.speed; if(L.ph.surge) sp*=(0.35+0.95*Math.abs(Math.sin(L.elapsed*0.6+i*1.3)));
+      r.ang=(r.ang+sp*dt)%(Math.PI*2); });
+    const act=L.rings.find(r=>!r.frozen);
+    if(act){ const inB=angDist(act.ang,KEY_A)<=L.ph.tol;
+      if(inB&&!act.wasIn) hap(8); act.wasIn=inB; }
+    return; }
+  const ph=L.ph;
+  if(ph.moveAmp){ L.pins.forEach(p=>p.curTarget=p.target+Math.sin(L.elapsed*ph.moveSpeed+p.phase)*ph.moveAmp); }
+  else L.pins.forEach(p=>p.curTarget=p.target);
+  if(ph.interfere){ L.intrudeFlash=Math.max(0,L.intrudeFlash-dt*3); L.intrudeT-=dt;
+    if(L.intrudeT<=0){ L.intrudeT=5.5+Math.random()*2.5;
+      const candidates=L.pins.filter(p=>p.set && (L.elapsed-p.setAt)>2.2);
+      const setN=L.pins.filter(p=>p.set).length, unsetN=L.pins.length-setN;
+      if(candidates.length && setN>=2 && unsetN>=2){
+        const v=candidates[Math.floor(Math.random()*candidates.length)];
+        v.set=false; v.h=0; L.setCount=Math.max(0,L.setCount-1);
+        L.intrudeFlash=1; Audio2.intrude(); flashScreen(.4);
+        setHint(L,"Rooke jars the lock. A pin slips free!");
+        advanceSel(L); refreshSel(); updateHud(L); } } }
+  L.pins.forEach((p,i)=>{
+    const tgt=(p.curTarget!==undefined?p.curTarget:p.target);
+    if(p.falseTimer>0){ p.falseTimer-=dt; if(p.falseTimer<=0){ p.h=0; Audio2.slip(); } return; }
+    if(p.set){ p.h+=(tgt-p.h)*Math.min(1,dt*12); return; }
+    if(L.ph.hideBand && i===L.sel){ const inB=Math.abs(p.h-tgt)<=p.tol;
+      if(inB&&!p.wasIn) hap(8); p.wasIn=inB; }
+    if(L.holding && i===L.sel && p.jam<=0){ p.h+=ph.rise*dt;
+      if(p.h>1){ p.h=1;
+        if(ph.shimHP){ L.shim--; L.holding=false; elPush.classList.remove("press");
+          if(L.shim<=0){ Audio2.crack(); failLock(L,"break"); }
+          else { p.jam=.6; Audio2.crack(); flashScreen(.2);
+            setHint(L,"The shim cracks. Gently now. ("+L.shim+" left)"); updateHud(L); } }
+        else if(ph.tension){ p.jam=.6; L.holding=false; elPush.classList.remove("press"); Audio2.jam(); setHint(L,"Bound. Ease off, then try that pin again."); } } }
+    else { if(p.jam>0) p.jam-=dt; p.h=Math.max(0,p.h-ph.fall*dt); } }); }
+
+function winLock(L){ L.done=true; L.paused=false; L.holding=false; elPush.classList.remove("press");
+  Audio2.win(); setTimeout(splash,400);
+  L.winPending=true;
+  const shown=fireBeat(L,"allset");
+  if(!shown){ L.winPending=false; setTimeout(proceedWin,1600); } }
+function proceedWin(){ saveProgress(levelIdx+2);
+  showStory(LEVELS[levelIdx].outro,()=>{ if(levelIdx>=LEVELS.length-1) goTitle(); else startLevel(levelIdx+1); },true); }
+function failLock(L,why){ if(L.done&&L.failed)return; L.done=true; L.failed=true; L.holding=false; elPush.classList.remove("press"); Audio2.lose();
+  const msgs={time:"The moment closes. The lock keeps its secret tonight.",break:"The shim snaps. Nothing left to pick with."};
+  setTimeout(()=>showResult(false,msgs[why]||"The lock holds. You don't."),600); }
+
+/* beats */
+function fireBeat(L,type,n){ const beats=L.cfg.beats||[];
+  for(const b of beats){ if(b.on!==type) continue;
+    if((type==="set"||type==="phase") && b.n!==n) continue;
+    const id=b.on+(b.n||""); if(L.firedBeats[id]) continue; L.firedBeats[id]=true; showDialogue(b.who,b.text); return true; }
+  return false; }
+function fireTimeBeats(L){ const beats=L.cfg.beats||[];
+  for(const b of beats){ if(b.on!=="time") continue;
+    const id="time"+b.at; if(L.firedBeats[id]) continue;
+    if(L.elapsed>=b.at){ L.firedBeats[id]=true; showDialogue(b.who,b.text); break; } } }
+/* Dialogue is a deliberate story moment: the lock pauses and recedes while
+   the words are up (the clock holds, so reading costs nothing), and a tap
+   anywhere on the screen, or Space/Enter, continues. */
+function syncPause(){ if(lock && state==="play" && !lock.done)
+  lock.paused = settingsOpen || elDlg.classList.contains("on"); }
+function showDialogue(who,text){ elDWho.textContent=who||""; elDLine.textContent=text||"";
+  Audio2.chime(); elDlg.classList.add("on"); elCtrls.classList.add("reading");
+  $("app").classList.add("reading"); syncPause(); }
+function hideDialogue(){ elDlg.classList.remove("on"); elCtrls.classList.remove("reading");
+  $("app").classList.remove("reading"); syncPause(); }
+function dismissDialogue(){ if(!elDlg.classList.contains("on"))return;
+  hideDialogue();
+  if(state==="play" && lock && lock.winPending){ lock.winPending=false; proceedWin(); } }
+
+/* ---------- RENDER ---------- */
+function render(L){ ctx2.clearRect(0,0,W,H);
+  if(L.type==="dial") renderDial(L); else if(L.type==="gates") renderGates(L); else renderPins(L);
+  if(L.intrudeFlash>0){ ctx2.fillStyle=hexA("#e0683f",.18*L.intrudeFlash); ctx2.fillRect(0,0,W,H); } }
+
+function renderPins(L){ const pal=L.cfg.pal,n=L.pins.length;
+  const top=H*0.22,bottom=H*0.66,lockH=bottom-top,areaW=Math.min(W*0.80,420),x0=(W-areaW)/2,gap=areaW/n,pinW=Math.min(gap*0.5,34);
+  ctx2.save(); const plateX=x0-26,plateW=areaW+52,plateY=top-30,plateH=lockH+74; roundRect(ctx2,plateX,plateY,plateW,plateH,10);
+  const grd=ctx2.createLinearGradient(0,plateY,0,plateY+plateH); grd.addColorStop(0,"rgba(10,8,6,.40)");
+  grd.addColorStop(.5,"rgba(10,8,6,.50)"); grd.addColorStop(1,"rgba(10,8,6,.62)"); ctx2.fillStyle=grd; ctx2.fill();
+  ctx2.lineWidth=1.2; ctx2.strokeStyle=hexA(pal.metal,.4); ctx2.stroke(); ctx2.restore();
+  for(let i=0;i<n;i++){ const cx=x0+gap*(i+0.5),p=L.pins[i],tgt=(p.curTarget!==undefined?p.curTarget:p.target);
+    ctx2.fillStyle="rgba(0,0,0,.4)"; roundRect(ctx2,cx-pinW/2,top,pinW,lockH,pinW/2); ctx2.fill();
+    ctx2.lineWidth=1; ctx2.strokeStyle=hexA(pal.metal,.22); ctx2.stroke();
+    const bandY=top+lockH*(1-(tgt+p.tol)),bandH=lockH*(p.tol*2),showBand=!L.ph.hideBand;
+    if(showBand && !p.set){ ctx2.fillStyle=hexA(pal.glow,.18); ctx2.fillRect(cx-pinW/2,bandY,pinW,bandH);
+      ctx2.strokeStyle=hexA(pal.glow,.5); ctx2.lineWidth=1; ctx2.strokeRect(cx-pinW/2,bandY,pinW,bandH);
+      if(p.decoy){ const dY=top+lockH*(1-(p.decoyTarget+p.tol)),dH=lockH*(p.tol*2);
+        ctx2.fillStyle=hexA(pal.glow,.18); ctx2.fillRect(cx-pinW/2,dY,pinW,dH); ctx2.strokeStyle=hexA(pal.glow,.5); ctx2.strokeRect(cx-pinW/2,dY,pinW,dH); } }
+    if(L.ph.hideBand && !p.set && i===L.sel){ const d=Math.abs(p.h-tgt); if(d<p.tol*2.4){ const a=(1-d/(p.tol*2.4))*0.5;
+      ctx2.fillStyle=hexA(pal.glow,a*0.4); ctx2.fillRect(cx-pinW/2,bandY-2,pinW,bandH+4); } }
+    const pinTopY=top+lockH*(1-p.h),ph2=Math.max(10,lockH*0.10);
+    const lit=p.set?pal.glow:(i===L.sel?pal.accent:pal.metal),grd2=ctx2.createLinearGradient(cx-pinW/2,0,cx+pinW/2,0);
+    grd2.addColorStop(0,hexA("#000000",.2)); grd2.addColorStop(.5,lit); grd2.addColorStop(1,hexA("#000000",.35));
+    ctx2.fillStyle=grd2; roundRect(ctx2,cx-pinW/2+2,pinTopY,pinW-4,ph2,4); ctx2.fill();
+    ctx2.fillStyle=hexA(lit,.55); ctx2.fillRect(cx-2,pinTopY+ph2,4,(top+lockH)-(pinTopY+ph2));
+    if(p.set){ ctx2.save(); ctx2.shadowColor=pal.glow; ctx2.shadowBlur=18; ctx2.fillStyle=hexA(pal.glow,.9);
+      roundRect(ctx2,cx-pinW/2+2,pinTopY,pinW-4,ph2,4); ctx2.fill(); ctx2.restore(); }
+    if(p.jam>0){ ctx2.fillStyle=hexA("#e0683f",.6*p.jam/0.6); ctx2.fillRect(cx-pinW/2,top,pinW,lockH); }
+    if(i===L.sel && !L.done){ ctx2.fillStyle=pal.glow; ctx2.beginPath(); const ay=top+lockH+16;
+      ctx2.moveTo(cx,ay-6); ctx2.lineTo(cx-6,ay+4); ctx2.lineTo(cx+6,ay+4); ctx2.closePath(); ctx2.fill(); } }
+  if(L.ph.darkness && !L.done){ const cx=x0+gap*(L.sel+0.5),cyp=top+lockH*0.5;
+    const rg=ctx2.createRadialGradient(cx,cyp,20,cx,cyp,lockH*1.05); rg.addColorStop(0,"rgba(0,0,0,0)");
+    rg.addColorStop(.55,"rgba(0,0,0,.5)"); rg.addColorStop(1,"rgba(0,0,0,.9)"); ctx2.fillStyle=rg; ctx2.fillRect(0,0,W,H); } }
+
+function renderDial(L){ const pal=L.cfg.pal;
+  const cx=W/2, cy=H*0.44, R=Math.min(W*0.36,170), n=L.arcs.length;
+  ctx2.beginPath(); ctx2.arc(cx,cy,R+26,0,Math.PI*2);
+  const grd=ctx2.createRadialGradient(cx,cy,R*0.2,cx,cy,R+26);
+  grd.addColorStop(0,"rgba(10,8,6,.55)"); grd.addColorStop(1,"rgba(10,8,6,.35)");
+  ctx2.fillStyle=grd; ctx2.fill();
+  ctx2.lineWidth=1.2; ctx2.strokeStyle=hexA(pal.metal,.4); ctx2.stroke();
+  for(let k=0;k<24;k++){ const a=k*Math.PI/12;
+    ctx2.strokeStyle=hexA(pal.metal,.3); ctx2.lineWidth=k%6===0?2:1;
+    ctx2.beginPath(); ctx2.moveTo(cx+Math.cos(a)*(R+12),cy+Math.sin(a)*(R+12));
+    ctx2.lineTo(cx+Math.cos(a)*(R+20),cy+Math.sin(a)*(R+20)); ctx2.stroke(); }
+  const activeIdx=L.arcs.findIndex(a=>!a.locked);
+  for(let i=0;i<n;i++){ const rr=R*(0.42+0.58*((i+1)/n)); const arc=L.arcs[i];
+    ctx2.beginPath(); ctx2.arc(cx,cy,rr,0,Math.PI*2);
+    ctx2.strokeStyle=hexA(pal.metal, i===activeIdx?0.45:0.18); ctx2.lineWidth=i===activeIdx?7:5; ctx2.stroke();
+    if(arc.locked){
+      ctx2.save(); ctx2.shadowColor=pal.glow; ctx2.shadowBlur=10;
+      ctx2.beginPath(); ctx2.arc(cx,cy,rr,arc.c-arc.w/2,arc.c+arc.w/2);
+      ctx2.strokeStyle=hexA(pal.glow,.85); ctx2.lineWidth=7; ctx2.stroke(); ctx2.restore(); }
+    else if(i===activeIdx){
+      ctx2.beginPath(); ctx2.arc(cx,cy,rr,arc.c-arc.w/2,arc.c+arc.w/2);
+      ctx2.strokeStyle=hexA(pal.glow,.55); ctx2.lineWidth=9; ctx2.stroke();
+      ctx2.beginPath(); ctx2.arc(cx,cy,rr,arc.c-arc.w/2,arc.c+arc.w/2);
+      ctx2.strokeStyle=hexA(pal.glow,.25); ctx2.lineWidth=15; ctx2.stroke(); } }
+  /* needle */
+  ctx2.save(); ctx2.translate(cx,cy); ctx2.rotate(L.needle);
+  ctx2.strokeStyle=hexA(pal.glow,.9); ctx2.lineWidth=3;
+  ctx2.beginPath(); ctx2.moveTo(R*0.16,0); ctx2.lineTo(R+8,0); ctx2.stroke();
+  ctx2.fillStyle=pal.glow; ctx2.beginPath();
+  ctx2.moveTo(R+16,0); ctx2.lineTo(R+4,-6); ctx2.lineTo(R+4,6); ctx2.closePath(); ctx2.fill();
+  ctx2.restore();
+  /* hub and keyway */
+  ctx2.fillStyle=hexA("#0a0806",.95); ctx2.beginPath(); ctx2.arc(cx,cy,R*0.14,0,Math.PI*2); ctx2.fill();
+  ctx2.strokeStyle=hexA(pal.metal,.5); ctx2.lineWidth=1.5; ctx2.stroke();
+  ctx2.fillStyle=hexA(pal.metal,.5); ctx2.beginPath(); ctx2.arc(cx,cy-3,4,0,Math.PI*2); ctx2.fill();
+  ctx2.fillRect(cx-2,cy-1,4,10);
+  /* direction cue */
+  const da=-Math.PI/2;
+  ctx2.save(); ctx2.translate(cx,cy); ctx2.rotate(da);
+  ctx2.strokeStyle=hexA(pal.glow,.45); ctx2.lineWidth=2;
+  ctx2.beginPath(); ctx2.arc(0,0,R*0.26,-0.7*L.dir,0.7*L.dir,L.dir<0); ctx2.stroke();
+  const tipA=0.7*L.dir; const tx=Math.cos(tipA)*R*0.26, ty=Math.sin(tipA)*R*0.26;
+  ctx2.fillStyle=hexA(pal.glow,.45); ctx2.beginPath();
+  ctx2.arc(tx,ty,3.4,0,Math.PI*2); ctx2.fill(); ctx2.restore(); }
+
+function renderGates(L){ const pal=L.cfg.pal;
+  const cx=W/2, cy=H*0.44, R=Math.min(W*0.36,180), n=L.rings.length;
+  const act=L.rings.findIndex(r=>!r.frozen);
+  const near= act>=0 && angDist(L.rings[act].ang,KEY_A)<=L.ph.tol;
+  /* plate */
+  ctx2.beginPath(); ctx2.arc(cx,cy,R+26,0,Math.PI*2);
+  const grd=ctx2.createRadialGradient(cx,cy,R*0.2,cx,cy,R+26);
+  grd.addColorStop(0,"rgba(10,8,6,.55)"); grd.addColorStop(1,"rgba(10,8,6,.35)");
+  ctx2.fillStyle=grd; ctx2.fill();
+  ctx2.lineWidth=1.2; ctx2.strokeStyle=hexA(pal.metal,.4); ctx2.stroke();
+  /* bolt-line: drawn under the rings so it shows only through open gaps */
+  ctx2.save(); ctx2.strokeStyle=hexA(pal.glow, near?0.9:0.45); ctx2.lineWidth=near?4:2.5;
+  if(near){ ctx2.shadowColor=pal.glow; ctx2.shadowBlur=14; }
+  ctx2.beginPath(); ctx2.moveTo(cx,cy-R-12); ctx2.lineTo(cx,cy-R*0.24); ctx2.stroke(); ctx2.restore();
+  /* rings: outermost first; tap to freeze each gap on the bolt-line */
+  for(let i=0;i<n;i++){ const r=L.rings[i]; const rr=R*(0.42+0.58*((n-i)/n));
+    ctx2.beginPath(); ctx2.arc(cx,cy,rr,0,Math.PI*2);
+    ctx2.strokeStyle=hexA(pal.metal, i===act?0.22:0.12); ctx2.lineWidth=i===act?13:9; ctx2.stroke();
+    const a0=r.ang+r.w/2, a1=r.ang-r.w/2+Math.PI*2;
+    ctx2.beginPath(); ctx2.arc(cx,cy,rr,a0,a1);
+    if(r.frozen){ ctx2.save(); ctx2.shadowColor=pal.glow; ctx2.shadowBlur=10;
+      ctx2.strokeStyle=hexA(pal.glow,.7); ctx2.lineWidth=9; ctx2.stroke(); ctx2.restore(); }
+    else { ctx2.strokeStyle=hexA(i===act?pal.accent:pal.metal, i===act?0.85:0.4); ctx2.lineWidth=i===act?11:7; ctx2.stroke(); }
+    if(!r.frozen && i===act){ [r.ang-r.w/2,r.ang+r.w/2].forEach(a=>{
+      ctx2.strokeStyle=hexA(pal.glow,.9); ctx2.lineWidth=3; ctx2.beginPath();
+      ctx2.moveTo(cx+Math.cos(a)*(rr-8),cy+Math.sin(a)*(rr-8));
+      ctx2.lineTo(cx+Math.cos(a)*(rr+8),cy+Math.sin(a)*(rr+8)); ctx2.stroke(); }); } }
+  /* missed tap: brief ember flash on the bolt-line so the tap visibly registered */
+  if(L.missT>0){ const a=L.missT/0.3;
+    ctx2.strokeStyle=hexA("#e0683f",.75*a); ctx2.lineWidth=4;
+    ctx2.beginPath(); ctx2.moveTo(cx,cy-R-12); ctx2.lineTo(cx,cy-R*0.24); ctx2.stroke(); }
+  /* bolt above the rings */
+  ctx2.save(); if(near||act<0){ ctx2.shadowColor=pal.glow; ctx2.shadowBlur=12; }
+  ctx2.fillStyle=hexA(pal.glow,(near||act<0)?0.95:0.5); ctx2.beginPath();
+  ctx2.moveTo(cx,cy-R-8); ctx2.lineTo(cx-7,cy-R-22); ctx2.lineTo(cx+7,cy-R-22); ctx2.closePath(); ctx2.fill(); ctx2.restore();
+  /* hub and keyway */
+  ctx2.fillStyle=hexA("#0a0806",.95); ctx2.beginPath(); ctx2.arc(cx,cy,R*0.16,0,Math.PI*2); ctx2.fill();
+  ctx2.strokeStyle=hexA(pal.metal,.5); ctx2.lineWidth=1.5; ctx2.stroke();
+  ctx2.fillStyle=hexA(pal.metal,.55); ctx2.beginPath(); ctx2.arc(cx,cy-4,4.5,0,Math.PI*2); ctx2.fill();
+  ctx2.fillRect(cx-2.5,cy-2,5,12); }
+
+/* ---------- LOOP / HUD ---------- */
+function loop(t){ requestAnimationFrame(loop); const dt=Math.min(.05,(t-lastT)/1000)||0; lastT=t;
+  drawScene(currentScene,t);
+  if(state==="play"&&lock){ updateLock(lock,dt); render(lock); updateHud(lock); }
+  else ctx2.clearRect(0,0,W,H); }
+function updateHud(L){
+  if(L.cfg.mech.timer){ elTimer.textContent=Math.ceil(L.time)+"s"; elTimer.classList.toggle("warn",L.time<=8); }
+  else { elTimer.textContent="∞"; elTimer.classList.remove("warn"); }
+  let txt;
+  if(L.type==="dial") txt="RINGS "+unitsDone(L)+" / "+unitCount(L);
+  else if(L.type==="gates") txt="WARDS "+unitsDone(L)+" / "+unitCount(L);
+  else { txt="PINS "+unitsDone(L)+" / "+unitCount(L);
+    if(L.ph.shimHP) txt+=" · SHIM "+"✦".repeat(Math.max(0,L.shim))+"✧".repeat(L.ph.shimHP-Math.max(0,L.shim)); }
+  if(L.phases.length>1) txt="PART "+(L.pi+1)+"/"+L.phases.length+" · "+txt;
+  elPins.textContent=txt; }
+
+function buildSel(L){ elSel.innerHTML=""; const n=unitCount(L);
+  for(let i=0;i<n;i++){ const d=document.createElement("div"); d.className="selpin";
+    if(L.type==="pins"){ const idx=i;
+      d.addEventListener("pointerdown",e=>{ e.preventDefault(); Audio2.init();Audio2.resume(); selectPin(L,idx); }); }
+    elSel.appendChild(d); }
+  refreshSel(); }
+function refreshSel(){ if(!lock)return;
+  const kids=[...elSel.children];
+  if(lock.type==="dial"){ const act=lock.arcs.findIndex(a=>!a.locked);
+    kids.forEach((d,i)=>{ d.classList.toggle("act",i===act); d.classList.toggle("set",lock.arcs[i].locked); }); }
+  else if(lock.type==="gates"){ const act=lock.rings.findIndex(r=>!r.frozen);
+    kids.forEach((d,i)=>{ d.classList.toggle("act",i===act); d.classList.toggle("set",lock.rings[i].frozen); }); }
+  else kids.forEach((d,i)=>{ d.classList.toggle("act",i===lock.sel); d.classList.toggle("set",lock.pins[i].set); }); }
+let hintTimer=null;
+function setHint(L,txt){ elHint.textContent=txt; if(hintTimer)clearTimeout(hintTimer);
+  if(txt)hintTimer=setTimeout(()=>{ elHint.textContent=L?(L.ph.tut||L.cfg.tut):""; },2800); }
+function flashScreen(a){ elFlash.style.transition="none"; elFlash.style.opacity=a;
+  requestAnimationFrame(()=>{ elFlash.style.transition="opacity .4s"; elFlash.style.opacity=0; }); }
+function markSigil(){ elSigil.style.transition="none"; elSigil.style.opacity=0;
+  requestAnimationFrame(()=>{ elSigil.style.transition="opacity 1.4s"; elSigil.style.opacity=.9;
+    setTimeout(()=>{ elSigil.style.opacity=0; },1500); }); }
+function splash(){ const s=$("splash"),sp=s.querySelector("span");
+  s.style.transition="none"; s.style.opacity=0; sp.style.transition="none"; sp.style.transform="scale(1.18)";
+  requestAnimationFrame(()=>{ s.style.transition="opacity .35s"; s.style.opacity=1;
+    sp.style.transition="transform 1.2s cubic-bezier(.2,.8,.2,1)"; sp.style.transform="scale(1)";
+    setTimeout(()=>{ s.style.opacity=0; },1300); }); }
+
+/* ---------- FLOW ---------- */
+function setBg(pal){ curPal=pal; elBg.style.background=pal.bg;
+  document.documentElement.style.setProperty('--accent',pal.accent); document.documentElement.style.setProperty('--glow',pal.glow); }
+function fadeTo(fn){ elFade.classList.add("on"); setTimeout(()=>{ fn(); elFade.classList.remove("on"); },560); }
+function hideAllOverlays(){ ["title","story","result"].forEach(id=>$(id).classList.remove("show")); }
+
+function goTitle(){ state="title"; lock=null; currentScene="title"; sceneImg="title.png"; scnInit("title");
+  Audio2.stopAmbient(); curAmbSpec=null; curMusicSpec=TITLE_MUSIC;
+  Music.start(TITLE_MUSIC); /* silent no-op until audio is ready and music is on */
+  elHud.classList.remove("on"); elCtrls.classList.remove("on"); $("backBtn").classList.remove("on"); hideDialogue(); hideAllOverlays();
+  setBg({bg:"radial-gradient(120% 90% at 50% 22%,#241a0c,#0c0b09 72%)",accent:"#c9a24b",glow:"#f4c969"});
+  $("btnContinue").style.display=unlocked>1?"block":"none"; buildChapters(); $("title").classList.add("show"); }
+
+let storyPages=[],storyPage=0,storyDone=null,storyIsOutro=false,storyBackTo=null;
+function showStory(pages,onDone,isOutro,exitLabel,backTo){ state="story"; storyPages=pages; storyPage=0; storyDone=onDone; storyIsOutro=isOutro;
+  storyBackTo=backTo||null;
+  $("btnSkip").textContent=exitLabel||"Skip";
+  elHud.classList.remove("on"); elCtrls.classList.remove("on"); $("backBtn").classList.remove("on");
+  hideDialogue(); hideAllOverlays();
+  renderStoryPage(); $("story").classList.add("show"); }
+function renderStoryPage(){ const pg=storyPages[storyPage];
+  $("stChap").textContent=pg.chap||""; $("stChap").style.display=pg.chap?"block":"none";
+  $("stTtl").textContent=pg.ttl||""; $("stTtl").style.display=pg.ttl?"block":"none";
+  $("stWho").textContent=pg.who?("from "+pg.who):""; $("stWho").style.display=pg.who?"block":"none";
+  let html=(pg.body||"").split("\n\n").map(s=>"<p style='margin:0 0 14px'>"+s.replace(/\n/g,"<br>")+"</p>").join("");
+  if(pg.vox) html+="<span class='vox'>"+pg.vox+"</span>"; $("stBody").innerHTML=html;
+  $("stNext").textContent= pg.next || (storyPage<storyPages.length-1 ? "Tap to continue" : (storyIsOutro? "Tap to go on":"Tap to begin"));
+  $("btnBack").style.display= (storyPage>0 || storyBackTo) ? "block":"none";
+  if(pg.sigil) setTimeout(markSigil,500);
+  if(pg.epilogue){ currentScene="epilogue"; sceneImg="epilogue.png"; scnInit("epilogue"); }
+  $("story").querySelector(".scrollwrap").scrollTop=0;
+  const inner=$("story").querySelector(".inner"); inner.style.opacity=0; inner.style.transform="translateY(16px)";
+  requestAnimationFrame(()=>{ inner.style.opacity=1; inner.style.transform="none"; }); }
+function advanceStory(){ if(state!=="story")return; storyPage++;
+  if(storyPage<storyPages.length) renderStoryPage(); else finishStory(); }
+function backStory(){ if(state!=="story")return;
+  if(storyPage>0){ storyPage--; renderStoryPage(); return; }
+  if(storyBackTo==="play") resumePlay();
+  else if(storyBackTo==="title"){ storyDone=null; fadeTo(()=>goTitle()); } }
+function finishStory(){ const fn=storyDone; storyDone=null; if(fn)fn(); }
+
+function startLevel(i){ levelIdx=i; const cfg=LEVELS[i]; fadeTo(()=>{ setBg(cfg.pal);
+  currentScene=cfg.scene; sceneImg=cfg.img; scnInit(cfg.scene);
+  Audio2.init(); curAmbSpec=cfg.amb; curMusicSpec=cfg.music;
+  Music.start(cfg.music); /* silent no-op while music is toggled off */
+  if(!muted&&S.music) Audio2.startAmbient(cfg.amb);
+  let pages=cfg.intro, seen=true;
+  try{ seen=!!localStorage.getItem(HOWTO_KEY); }catch(e){}
+  if(i===0 && !seen){ pages=HOWTO.concat(cfg.intro); try{localStorage.setItem(HOWTO_KEY,"1");}catch(e){} }
+  showStory(pages,()=>beginPlay(i),false,"Skip","title"); }); }
+function beginPlay(i){ const cfg=LEVELS[i]; state="play"; lock=makeLock(cfg); Music.tense(false); hideDialogue(); hideAllOverlays(); setBg(cfg.pal);
+  currentScene=cfg.scene; sceneImg=cfg.img;
+  elLoc.textContent=cfg.loc; elSub.textContent=cfg.sub; elHud.classList.add("on"); elCtrls.classList.add("on"); $("backBtn").classList.add("on");
+  applyPhaseUI(lock); lastT=performance.now(); updateHud(lock);
+  setTimeout(()=>{ if(lock&&!lock.done&&state==="play") fireBeat(lock,"start"); },700); }
+/* return to a lock left in progress (after re-reading the chapter text) */
+function resumePlay(){ state="play"; hideAllOverlays();
+  elHud.classList.add("on"); elCtrls.classList.add("on"); $("backBtn").classList.add("on");
+  syncPause(); lastT=performance.now(); }
+function showResult(win,msg){ state="result"; elHud.classList.remove("on"); elCtrls.classList.remove("on"); $("backBtn").classList.remove("on"); hideDialogue();
+  const r=$("result"); r.classList.remove("win","lose"); r.classList.add(win?"win":"lose");
+  $("rkTtl").textContent=win?"Opened":"Caught"; $("rkMsg").textContent=msg||""; hideAllOverlays(); r.classList.add("show"); }
+function buildChapters(){ const wrap=$("levelSel"); wrap.innerHTML="";
+  LEVELS.forEach((lv,i)=>{ const b=document.createElement("button"); const open=(i+1)<=unlocked;
+    b.type="button"; b.className="lv "+(open?"open":"lock"); b.textContent=i+1;
+    b.setAttribute("aria-label","Chapter "+(i+1)+(open?": "+lv.loc:" (locked)"));
+    if(open) b.addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>startLevel(i)); });
+    else b.disabled=true;
+    wrap.appendChild(b); }); }
+
+/* ---------- SETTINGS / SOUND ---------- */
+const SET_KEY="tumbler_settings_v1";
+let S=loadSettings(), settingsOpen=false;
+function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(SET_KEY)||"{}");
+  return { music:s.music!==false, sfx:s.sfx!==false,
+    musicVol:Math.min(100,Math.max(0,parseInt(s.musicVol)>=0?parseInt(s.musicVol):80)),
+    sfxVol:Math.min(100,Math.max(0,parseInt(s.sfxVol)>=0?parseInt(s.sfxVol):80)) };
+  }catch(e){ return {music:true,sfx:true,musicVol:80,sfxVol:80}; } }
+function saveSettings(){ try{localStorage.setItem(SET_KEY,JSON.stringify(S));}catch(e){} }
+function applyVolumesOnly(){ Audio2.setVolumes((S.music&&!muted)?S.musicVol/100:0,(S.sfx&&!muted)?S.sfxVol/100:0); }
+function applyAudio(){ applyVolumesOnly();
+  const mOn=S.music&&!muted;
+  Music.setOn(mOn);
+  if(mOn){ if(curAmbSpec) Audio2.startAmbient(curAmbSpec); } else Audio2.stopAmbient(); }
+function setMuted(v){ muted=v; $("setBtn").classList.toggle("off",v); applyAudio(); }
+function refreshSettingsUI(){
+  [["tglMusic",S.music],["tglSfx",S.sfx]].forEach(([id,on])=>{ const b=$(id);
+    b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); b.textContent=on?"On":"Off"; });
+  $("volMusic").value=S.musicVol; $("volSfx").value=S.sfxVol;
+  $("volMusicVal").textContent=S.musicVol+"%"; $("volSfxVal").textContent=S.sfxVol+"%"; }
+function openSettings(){ Audio2.init(); Audio2.resume();
+  settingsOpen=true; refreshSettingsUI();
+  $("setPlayRow").style.display = state==="play" ? "flex" : "none";
+  $("settings").classList.add("show"); syncPause(); }
+function closeSettings(){ if(!settingsOpen)return; settingsOpen=false; $("settings").classList.remove("show"); saveSettings();
+  syncPause(); }
+$("setRestart").addEventListener("click",()=>{ closeSettings(); hideDialogue(); fadeTo(()=>beginPlay(levelIdx)); });
+$("setQuit").addEventListener("click",()=>{ closeSettings(); fadeTo(()=>goTitle()); });
+$("setBtn").addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation();
+  if(settingsOpen) closeSettings(); else openSettings(); });
+$("setDone").addEventListener("click",closeSettings);
+$("settings").addEventListener("pointerdown",e=>{ if(e.target===$("settings")) closeSettings(); });
+$("tglMusic").addEventListener("click",()=>{ S.music=!S.music; applyAudio(); refreshSettingsUI(); saveSettings(); });
+$("tglSfx").addEventListener("click",()=>{ S.sfx=!S.sfx; applyVolumesOnly(); refreshSettingsUI(); saveSettings(); });
+$("volMusic").addEventListener("input",()=>{ S.musicVol=+$("volMusic").value; $("volMusicVal").textContent=S.musicVol+"%"; applyVolumesOnly(); });
+$("volSfx").addEventListener("input",()=>{ S.sfxVol=+$("volSfx").value; $("volSfxVal").textContent=S.sfxVol+"%"; applyVolumesOnly(); });
+[["volMusic"],["volSfx"]].forEach(([id])=>$(id).addEventListener("change",saveSettings));
+Music.setOn(S.music); applyVolumesOnly();
+
+/* ---------- INPUT ---------- */
+function pushDown(e){ e.preventDefault(); Audio2.init(); Audio2.resume();
+  if(state==="play" && elDlg.classList.contains("on")){ dismissDialogue(); return; }
+  if(state==="play"&&lock) startHold(lock); }
+function pushUp(e){ if(e)e.preventDefault(); if(state==="play"&&lock) releaseHold(lock); }
+elPush.addEventListener("pointerdown",e=>{ try{elPush.setPointerCapture(e.pointerId);}catch(err){} pushDown(e); });
+elPush.addEventListener("pointerup",pushUp);
+elPush.addEventListener("pointercancel",pushUp);
+elDlg.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); Audio2.init();Audio2.resume(); dismissDialogue(); });
+cv.addEventListener("pointerdown",e=>{ if(state!=="play"||!lock)return; e.preventDefault(); Audio2.init();Audio2.resume();
+  if(elDlg.classList.contains("on")){ dismissDialogue(); return; }
+  if(lock.paused)return;
+  try{cv.setPointerCapture(e.pointerId);}catch(err){}
+  if(lock.type==="dial"||lock.type==="gates"){ startHold(lock); return; }
+  const rect=cv.getBoundingClientRect(),x=e.clientX-rect.left,n=lock.pins.length,areaW=Math.min(W*0.80,420),x0=(W-areaW)/2,gap=areaW/n;
+  let idx=Math.floor((x-x0)/gap);
+  if(idx>=0&&idx<n){ lock.sel=idx; refreshSel(); startHold(lock); }
+  else startHold(lock); });
+cv.addEventListener("pointerup",e=>{ if(state==="play"&&lock&&lock.holding) releaseHold(lock); });
+cv.addEventListener("pointercancel",e=>{ if(state==="play"&&lock&&lock.holding) releaseHold(lock); });
+window.addEventListener("keydown",e=>{
+  if(e.code==="Escape" && !e.repeat){ if(settingsOpen){ closeSettings(); e.preventDefault(); } return; }
+  if(settingsOpen) return;
+  if(e.code==="KeyM" && !e.repeat){ Audio2.init();Audio2.resume(); setMuted(!muted); return; }
+  if(state==="story" && (e.code==="Space"||e.code==="Enter") && !e.repeat){
+    Audio2.init();Audio2.resume(); advanceStory(); e.preventDefault(); return; }
+  if(state!=="play"||!lock)return;
+  if(lock.winPending || elDlg.classList.contains("on")){
+    if((e.code==="Space"||e.code==="Enter") && !e.repeat){ Audio2.init();Audio2.resume(); dismissDialogue(); e.preventDefault(); } return; }
+  if(lock.paused) return;
+  if(e.code==="ArrowLeft"){ selectPin(lock,lock.sel-1); e.preventDefault(); }
+  else if(e.code==="ArrowRight"){ selectPin(lock,lock.sel+1); e.preventDefault(); }
+  else if(e.code==="Space"){ if(!e.repeat){ Audio2.init();Audio2.resume(); startHold(lock); } e.preventDefault(); } });
+window.addEventListener("keyup",e=>{ if(state!=="play"||!lock)return; if(e.code==="Space"){ releaseHold(lock); e.preventDefault(); } });
+$("story").addEventListener("pointerdown",e=>{ Audio2.init();Audio2.resume(); advanceStory(); });
+$("btnSkip").addEventListener("pointerdown",e=>{ e.stopPropagation(); e.preventDefault(); finishStory(); });
+$("btnBack").addEventListener("pointerdown",e=>{ e.stopPropagation(); e.preventDefault(); Audio2.init();Audio2.resume(); backStory(); });
+$("backBtn").addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation();
+  if(state!=="play"||!lock||lock.winPending)return; Audio2.init();Audio2.resume();
+  showStory(LEVELS[levelIdx].intro,()=>resumePlay(),false,"Close","play"); });
+$("btnNew").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>startLevel(0)); });
+$("btnContinue").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>startLevel(Math.min(unlocked-1,LEVELS.length-1))); });
+$("btnChapters").addEventListener("click",()=>{ const s=$("levelSel"); s.style.display=s.style.display==="none"?"grid":"none"; });
+$("btnHow").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); showStory(HOWTO,()=>goTitle(),false,"Back","title"); });
+$("btnAgain").addEventListener("click",()=>{ Audio2.init();Audio2.resume(); fadeTo(()=>beginPlay(levelIdx)); });
+$("btnQuit").addEventListener("click",()=>{ fadeTo(()=>goTitle()); });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) Audio2.suspend(); else Audio2.resume(); });
+
+/* ---------- BOOT ---------- */
+resize(); scnInit("title"); goTitle(); requestAnimationFrame(t=>{ lastT=t; loop(t); });
+</script>
+</body>
+</html>
