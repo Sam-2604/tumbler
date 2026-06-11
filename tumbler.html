@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0c0b09">
+<meta name="description" content="TUMBLER is a story-driven lockpicking game. Ten locks, one drowned city, and the name they tried to erase.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230c0b09'/%3E%3Ccircle cx='32' cy='24' r='9' fill='none' stroke='%23c9a24b' stroke-width='5'/%3E%3Cpath d='M28.5 31h7l-2 19h-3z' fill='%23c9a24b'/%3E%3C/svg%3E">
 <title>TUMBLER</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -228,8 +230,8 @@
     <button class="btn" id="btnContinue" style="display:none">Continue</button>
     <button class="btn" id="btnNew">New Game</button>
     <button class="btn ghost" id="btnChapters">Chapters</button>
-    <button class="btn ghost" id="btnHow">How to Play</button>
     <div id="levelSel" style="display:none"></div>
+    <button class="btn ghost" id="btnHow">How to Play</button>
   </div>
 
   <div id="story" class="overlay" role="dialog" aria-live="polite">
@@ -378,7 +380,7 @@ function hap(p){ try{ if(navigator.vibrate) navigator.vibrate(p);}catch(e){} }
    "gates" (warded rings spin on their own; tap to freeze each gap on the
    bolt-line at the top). Levels can chain phases. */
 const LEVELS = [
- { loc:"The Poor-Box", sub:"Chapel of Saint Maren, Harrowmere", scene:"chapel", img:"lv01.png",
+ { loc:"The Poor-Box", sub:"Chapel of Saint Maren, Harrowmere", scene:"chapel", img:"lv01.jpg",
    pal:{bg:"radial-gradient(130% 90% at 50% 18%,#2a1d0e,#0c0a06 70%)",accent:"#e0a44a",glow:"#ffcf7a",metal:"#caa05a"},
    amb:{drone:70,droneG:0.045,bed:true,bedFreq:380,bedG:0.018,lfo:0.1},
    music:{root:57,scale:"aeolian",bpm:54,prog:[0,5,3,4],density:.18,lead:"bell",mel:[0,null,null,null,2,null,1,null]},
@@ -394,7 +396,7 @@ const LEVELS = [
    outro:[ {ttl:"A first coin",sigil:true,
      body:"The box opens on the third try. She takes two coins and leaves one, because that was his rule.\n\nShe does not see the maker's mark stamped under the lock plate: a small falcon, wings out, holding still against the wind. A kestrel in its hover. Her father drew that bird on everything he ever made.\n\nThe city has a thousand locks like this one. She will come to know them all."} ] },
 
- { loc:"The Backroom", sub:"Rooke's pawnshop, Gullrow", scene:"pawnshop", img:"lv02.png",
+ { loc:"The Backroom", sub:"Rooke's pawnshop, Gullrow", scene:"pawnshop", img:"lv02.jpg",
    pal:{bg:"radial-gradient(120% 90% at 50% 28%,#11281f,#0a0f0c 72%)",accent:"#d8b35a",glow:"#ffe39a",metal:"#b9985a"},
    amb:{drone:58,droneG:0.045,bed:true,bedFreq:240,bedG:0.014,lfo:0.07},
    music:{root:55,scale:"dorian",bpm:66,prog:[0,3,5,4],density:.25,lead:"pluck",mel:[0,2,4,null,5,4,2,null]},
@@ -412,7 +414,7 @@ const LEVELS = [
    outro:[ {ttl:"His order",
      body:"Each practice case opens in turn, and Rooke watches with something on his face that is not quite pride.\n\nIn the last case lies a single coin, green with age, stamped with a tower that stands on no street of Harrowmere. When she asks about it, he turns it face down and talks about supper instead.\n\nShe palms it when he isn't looking. The first thing she ever steals from him."} ] },
 
- { loc:"The Harbour Office", sub:"Tideward docks, midnight rain", scene:"docks", img:"lv03.png",
+ { loc:"The Harbour Office", sub:"Tideward docks, midnight rain", scene:"docks", img:"lv03.jpg",
    pal:{bg:"linear-gradient(180deg,#0e1a26,#070b10 75%)",accent:"#6fb0c4",glow:"#bfe6f2",metal:"#8aa6b0"},
    amb:{drone:48,droneG:0.035,bed:true,bedFreq:1200,bedG:0.016,bedType:"bandpass",lfo:0.3},
    music:{root:50,scale:"dorian",bpm:92,prog:[0,0,5,6],density:.4,arp:true,lead:"pluck",mel:[null,0,null,null,4,null,2,null]},
@@ -430,7 +432,7 @@ const LEVELS = [
    outro:[ {ttl:"Grid Nine",
      body:"The cabinet clicks. The papers vanish into Jay's coat, and the two of them melt into the rain, laughing the silent laugh of people who got away clean.\n\nLater, alone, Kess reads what she was never meant to read. Salvage permits, sealed by the Charter Court. Dredging rights for something under the harbour, marked only as <em>Grid Nine</em>. The Houses are pulling things up from beneath the city.\n\nRooke pays them in coin and praise, and files the papers where she never sees them again."} ] },
 
- { loc:"The Collector", sub:"Highcrest hill, after midnight", scene:"hall", img:"lv04.png",
+ { loc:"The Collector", sub:"Highcrest hill, after midnight", scene:"hall", img:"lv04.jpg",
    pal:{bg:"radial-gradient(120% 90% at 50% 24%,#2a2418,#0b0a07 72%)",accent:"#e6c878",glow:"#fff0c0",metal:"#d8c081"},
    amb:{drone:64,droneG:0.04,bed:true,bedFreq:300,bedG:0.011,lfo:0.05},
    music:{root:52,scale:"lydian",bpm:72,prog:[0,4,5,3],density:.3,lead:"bell",mel:[4,null,null,6,null,null,7,null]},
@@ -447,7 +449,7 @@ const LEVELS = [
    outro:[ {ttl:"The letter",sigil:true,
      body:"Inside the case there is no gold. A roll of waxed cloth. A map of streets that do not exist. And a letter in her father's handwriting, twelve years old, with her name on it.\n\n<span class='vox'>\u201cKess. If this has found you, then I am gone, and the half-key you wear is yours now. Find the old man in Saltrock Prison, the one who drew the under-roads. And trust no one who feeds you, for they were paid to.\u201d</span>\n\nHe sealed it in with everything he loved, in the safest place he knew. The Houses dredged it up themselves.\n\nShe pockets all of it before Rooke can see. The first secret she has ever kept from him."} ] },
 
- { loc:"The Strongroom", sub:"Highcrest, the night it turns", scene:"alarm", img:"lv05.png",
+ { loc:"The Strongroom", sub:"Highcrest, the night it turns", scene:"alarm", img:"lv05.jpg",
    pal:{bg:"radial-gradient(120% 90% at 50% 42%,#3a0f0c,#0a0504 72%)",accent:"#e0683f",glow:"#ff8a5a",metal:"#c06848"},
    amb:{drone:96,droneG:0.045,bed:true,bedFreq:800,bedG:0.026,lfo:1.5},
    music:{root:52,scale:"phrygian",bpm:122,prog:[0,1,0,6],density:.5,pulse:true,arp:true,lead:"pluck",mel:[0,0,null,1,null,0,3,null]},
@@ -464,7 +466,7 @@ const LEVELS = [
    outro:[ {ttl:"The man on the stair",
      body:"The door swings. She hurls Jay through it, into the dark and the rain, and then the Watch is on her, and the cold iron, and the hood.\n\nThe last thing she sees, through the closing black, is the top of the stair. A tall figure standing among the lanterns, untouched and unhurried. Not running. Counting.\n\nShe knows that coat. All the way down into the dark, she keeps telling herself she is wrong."} ] },
 
- { loc:"The Cell", sub:"Saltrock Prison, three levels under the sea", scene:"cell", img:"lv06.png",
+ { loc:"The Cell", sub:"Saltrock Prison, three levels under the sea", scene:"cell", img:"lv06.jpg",
    pal:{bg:"linear-gradient(180deg,#1a1c20,#08090a 78%)",accent:"#8d97a0",glow:"#cdd6dd",metal:"#9aa3aa"},
    amb:{drone:44,droneG:0.055,bed:true,bedFreq:200,bedG:0.018,lfo:0.04},
    music:{root:45,scale:"aeolian",bpm:42,prog:[0,5],density:.12,lead:"air",mel:[null,null,null,0,null,null,null,2]},
@@ -482,7 +484,7 @@ const LEVELS = [
      body:"The irons open. The old man gives his name in a whisper: Anselm. A mapmaker, once, for an order sworn to the city below. He will say nothing more inside these walls. Saltrock's stones are paid to listen.\n\nTwo things only, before the lamps come round.\n\nThat the brass at her throat is half of a key. And that the last man who carried one was hanged in the fish market, twelve years ago. He does not say the name. She says it for him.",
      who:"Anselm",vox:"\u201cThere is a way out of this place, child. It goes down. I will show you, and you will not thank me.\u201d"} ] },
 
- { loc:"The Drowned Stair", sub:"Below Saltrock, the tide line", scene:"stair", img:"lv07.png",
+ { loc:"The Drowned Stair", sub:"Below Saltrock, the tide line", scene:"stair", img:"lv07.jpg",
    pal:{bg:"radial-gradient(120% 100% at 50% 14%,#101a33,#05070e 74%)",accent:"#7c8fd0",glow:"#cfe0ff",metal:"#8a98c0"},
    amb:{drone:52,droneG:0.045,bed:true,bedFreq:500,bedG:0.022,lfo:0.5},
    music:{root:48,scale:"aeolian",bpm:80,prog:[0,6,5,4],density:.3,lead:"air",mel:[0,null,2,null,3,null,2,null]},
@@ -501,7 +503,7 @@ const LEVELS = [
     {ttl:"Down",
      body:"Kess goes down alone, past the last of the lamplight, into Sorenne.\n\nThe towers stand whole in the green dark, lit by drifting cold fire. Streets, squares, doorways, all of it still standing, holding its breath under the harbour.\n\nThe tallest tower climbs clean out of sight, up toward the surface. She has seen it before. Green with age, stamped on a coin she stole from Rooke's back room."} ] },
 
- { loc:"Sorenne", sub:"The drowned city, the craft quarter", scene:"veyra", img:"lv08.png",
+ { loc:"Sorenne", sub:"The drowned city, the craft quarter", scene:"veyra", img:"lv08.jpg",
    pal:{bg:"radial-gradient(120% 110% at 50% 58%,#0a2e33,#03100f 72%)",accent:"#3fd0c4",glow:"#9af7ec",metal:"#4fb8b0"},
    amb:{drone:60,droneG:0.055,bed:true,bedFreq:420,bedG:0.026,lfo:0.2},
    music:{root:55,scale:"lydian",bpm:58,prog:[0,4,1,5],density:.35,lead:"bell",mel:[7,null,4,null,null,9,7,null]},
@@ -522,7 +524,7 @@ const LEVELS = [
    outro:[ {ttl:"The seal",sigil:true,
      body:"At the foot of the wall there is a grave with no body in it. Just a name. <em>CALDER VANE, KEYWRIGHT</em>, cut by his own hand, because he knew that no one else would ever cut it.\n\nBeside it, wrapped in oilcloth, the last letter her father ever received. An offer, signed and sealed: his life and his daughter's, safe passage out of Harrowmere, if he came quietly and brought the wing. He knew exactly what it was. He went with empty hands anyway, because the price of refusing was her.\n\nThe seal on the offer is a rook.\n\nShe sits a long time in the drowned city, with her father's death in her hands, and understands who has been feeding her."} ] },
 
- { loc:"The Vault of Names", sub:"The heart of Sorenne", scene:"vault", img:"lv09.png",
+ { loc:"The Vault of Names", sub:"The heart of Sorenne", scene:"vault", img:"lv09.jpg",
    pal:{bg:"radial-gradient(120% 100% at 50% 34%,#2c2008,#0a0703 72%)",accent:"#e8b94a",glow:"#ffe07a",metal:"#e0c060"},
    amb:{drone:42,droneG:0.06,bed:true,bedFreq:180,bedG:0.018,lfo:0.06},
    music:{root:50,scale:"aeolian",bpm:76,prog:[0,3,6,4],density:.35,lead:"pluck",mel:[0,null,null,1,null,null,2,null]},
@@ -531,7 +533,7 @@ const LEVELS = [
    beats:[
     {on:"start",who:"Rooke",text:"You found it. Of course you found it. I raised you on questions, little hover. I just never thought you would ask the right one."},
     {on:"set",n:1,who:"Rooke",text:"Say it, then. Yes. I sold Calder Vane to the Charter Court. My oldest friend. The Houses meant to end the whole Vane line, root and stem and seed. You were the seed."},
-    {on:"time",at:22,who:"Rooke",text:"I gave them your father, and with the change I bought you. Food. Walls. A trade. And when you started reading papers you were only paid to steal, I bought you a cell in Saltrock, because the Houses' next offer was a rope. Hate me with your whole chest, girl. You are alive to do it."},
+    {on:"set",n:2,who:"Rooke",text:"I gave them your father, and with the change I bought you. Food. Walls. A trade. And when you started reading papers you were only paid to steal, I bought you a cell in Saltrock, because the Houses' next offer was a rope. Hate me with your whole chest, girl. You are alive to do it."},
     {on:"allset",who:"Rooke",text:"Your half is open. And here is mine. Shrike's key. The traitor's, the same one that drowned this city. The Houses gave it to me to keep buried, the night I buried your father. This door takes two keys turning together, Kess. Watch what it does when they fight."} ],
    intro:[
     {chap:"Chapter IX",ttl:"The Vault of Names",
@@ -540,7 +542,7 @@ const LEVELS = [
    outro:[ {ttl:"One turn more",
      body:"Ring by ring, her half of the great lock gives way, and catches, and holds. Her key stands turned. The door is half awake.\n\nRooke walks to the right-hand keyhole and seats Shrike's key like a man who has rehearsed this for twelve years. Turned with hers, it opens the door. Turned against hers, it winds the lock dead: shut forever, and the sea keeps everything.\n\n\u201cGood girl,\u201d he says quietly. \u201cNow watch me bury it.\u201d"} ] },
 
- { loc:"The Last Lock", sub:"The Vault face, the storm tide", scene:"storm", img:"lv10.png",
+ { loc:"The Last Lock", sub:"The Vault face, the storm tide", scene:"storm", img:"lv10.jpg",
    pal:{bg:"radial-gradient(120% 100% at 50% 30%,#1c1015,#040305 72%)",accent:"#d9c2c8",glow:"#ffffff",metal:"#c8a86a"},
    amb:{drone:50,droneG:0.05,bed:true,bedFreq:300,bedG:0.026,lfo:0.8},
    music:{root:50,scale:"phrygian",bpm:128,prog:[0,1,6,0],density:.55,pulse:true,arp:true,lead:"pluck",mel:[0,1,0,null,3,1,0,null]},
@@ -554,7 +556,7 @@ const LEVELS = [
    tut:"He fights you through the lock itself. The pins first. Then the wards. Then the master ring.",
    beats:[
     {on:"start",who:"Kess",text:"You taught me a lock is a question. So answer mine, Rooke. What good is a city that has to drown the truth to keep standing?"},
-    {on:"time",at:16,who:"Rooke",text:"Safe! It is worth SAFE, you stubborn, brilliant child. Names start fires. I have spent thirty years keeping you, and this whole rotten city, out of the smoke."},
+    {on:"set",n:2,who:"Rooke",text:"Safe! It is worth SAFE, you stubborn, brilliant child. Names start fires. I have spent thirty years keeping you, and this whole rotten city, out of the smoke."},
     {on:"set",n:3,who:"Kess",text:"Not safe, Rooke. Afraid. I grew up in your house. I know the difference. And stop calling me little hover. That name was my father's, and you sold him."},
     {on:"phase",n:2,who:"Rooke",text:"Hear that grinding? That is the lock tearing itself apart between us. If it breaks, this door never opens. For anyone. Ever. I do not have to beat you, Kess. I only have to hold on."},
     {on:"phase",n:3,who:"Kess",text:"Then hold on. Break the last thing my family ever built, with me standing here watching you do it. You sold my father once. He wrote that you would do it twice. Prove him right."},
@@ -588,7 +590,7 @@ let DPR=1,W=0,H=0;
 const SAVE_KEY="tumbler_progress_v2";
 let unlocked=loadProgress();
 let state="title", levelIdx=0, lock=null, lastT=0;
-let currentScene="title", sceneImg="title.png", curPal=null;
+let currentScene="title", sceneImg="title.jpg", curPal=null;
 let muted=false, curMusicSpec=null, curAmbSpec=null;
 function loadProgress(){ try{return Math.max(1,parseInt(localStorage.getItem(SAVE_KEY))||1);}catch(e){return 1;} }
 function saveProgress(n){ unlocked=Math.max(unlocked,n); try{localStorage.setItem(SAVE_KEY,String(unlocked));}catch(e){} }
@@ -1165,7 +1167,7 @@ function setBg(pal){ curPal=pal; elBg.style.background=pal.bg;
 function fadeTo(fn){ elFade.classList.add("on"); setTimeout(()=>{ fn(); elFade.classList.remove("on"); },560); }
 function hideAllOverlays(){ ["title","story","result"].forEach(id=>$(id).classList.remove("show")); }
 
-function goTitle(){ state="title"; lock=null; currentScene="title"; sceneImg="title.png"; scnInit("title");
+function goTitle(){ state="title"; lock=null; currentScene="title"; sceneImg="title.jpg"; scnInit("title");
   Audio2.stopAmbient(); curAmbSpec=null; curMusicSpec=TITLE_MUSIC;
   Music.start(TITLE_MUSIC); /* silent no-op until audio is ready and music is on */
   elHud.classList.remove("on"); elCtrls.classList.remove("on"); $("backBtn").classList.remove("on"); hideChNav(); hideDialogue(); hideAllOverlays();
@@ -1193,7 +1195,7 @@ function renderStoryPage(){ const pg=storyPages[storyPage];
   $("stNext").textContent= pg.next || (storyPage<storyPages.length-1 ? "Tap to continue" : (storyIsOutro? "Tap to go on":"Tap to begin"));
   $("btnBack").style.display= (storyPage>0 || storyBackTo) ? "block":"none";
   if(pg.sigil) setTimeout(markSigil,500);
-  if(pg.epilogue){ currentScene="epilogue"; sceneImg="epilogue.png"; scnInit("epilogue"); }
+  if(pg.epilogue){ currentScene="epilogue"; sceneImg="epilogue.jpg"; scnInit("epilogue"); }
   $("story").querySelector(".scrollwrap").scrollTop=0;
   const inner=$("story").querySelector(".inner"); inner.style.opacity=0; inner.style.transform="translateY(16px)";
   requestAnimationFrame(()=>{ inner.style.opacity=1; inner.style.transform="none";
