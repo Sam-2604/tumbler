@@ -371,7 +371,7 @@ const LEVELS = [
     {chap:"Chapter I",ttl:"The Almsbox",
      body:"Harrowmere drinks the sea a little deeper every year. The Cormorant Houses built it in a hurry, on pilings and rubble, above something they wanted forgotten. When the fog comes in off the water, the old folk say the city below is breathing.\n\nIn the chapel of Saint Maren, a black iron poor-box holds the coins of the faithful. Kess is nine years old. She has not eaten in three days. Around her neck, on a frayed cord, hangs half a brass key that fits no lock she has ever found. It is the only thing her father left behind on the night the Watch came for him."} ],
    outro:[ {ttl:"A first coin",sigil:true,
-     body:"The box opens with a sound like a small bird landing. She takes two coins and leaves one, because that was his rule.\n\nShe does not see the maker's mark stamped under the lock plate: a small falcon, wings spread, holding perfectly still against the moving air. A kestrel in its hover. The same bird her father drew on everything he ever made.\n\nThe city has a thousand locks like this one. She will come to know them all."} ] },
+     body:"The box opens on the third try. She takes two coins and leaves one, because that was his rule.\n\nShe does not see the maker's mark stamped under the lock plate: a small falcon, wings out, holding still against the wind. A kestrel in its hover. Her father drew that bird on everything he ever made.\n\nThe city has a thousand locks like this one. She will come to know them all."} ] },
 
  { loc:"The Backroom", sub:"Rooke's pawnshop, Gullrow", scene:"pawnshop", img:"lv02.png",
    pal:{bg:"radial-gradient(120% 90% at 50% 28%,#11281f,#0a0f0c 72%)",accent:"#d8b35a",glow:"#ffe39a",metal:"#b9985a"},
@@ -383,13 +383,13 @@ const LEVELS = [
     {on:"start",who:"Rooke",text:"Most people pick a lock the way they argue. All force, no listening. You listen, little hover. That is rarer than you know."},
     {on:"set",n:1,who:"Rooke",text:"Left to right, always. A lock has an order, and so does a life. The ones who skip steps end up at the gallows or in the Charter Court. Same thing, really."},
     {on:"time",at:22,who:"Rooke",text:"When you're done there's bread and dripping on the counter. Eat it before the cat does. Growing thieves need feeding."},
-    {on:"allset",who:"Rooke",text:"Good. Very good. Your father had hands like... never mind, sparrow. Old men talk. Forget I said anything."} ],
+    {on:"allset",who:"Rooke",text:"Good. Very good. Your father had hands like... never mind, girl. Old men talk. Forget I said anything."} ],
    intro:[
     {chap:"Chapter II",ttl:"The Backroom",
-     body:"Three winters later, the bent nail has become a proper pick, and Kess belongs to Rooke. He is a fence with a velvet voice and a shop full of other people's memories, and he took her off the cobbles the same week her father was hanged. He has never once said why.\n\nThe under-folk of Harrowmere all carry bird names. Kess never asked about that either. Some questions you grow into.",
+     body:"Three winters later, the bent nail has become a proper pick, and Kess belongs to Rooke. He is a fence with a velvet voice and a shop full of other people's things, and he took her in off the cobbles the same week her father was hanged. He has never once said why.\n\nThe under-folk of Harrowmere all carry bird names. Kess never asked about that either. Some questions you grow into.",
      who:"Rooke",vox:"\u201cYou've a gift, little hover. Most people pick a lock. You listen to it.\u201d"} ],
    outro:[ {ttl:"His order",
-     body:"Each practice case opens in turn, and Rooke watches with an expression caught somewhere between pride and grief.\n\nIn the last case lies a single coin, green with age, stamped with a tower that stands on no street of Harrowmere. When she asks about it, he turns it face down and changes the subject, smooth as oil over water.\n\nShe palms it when he isn't looking. It is the first thing she ever steals from him."} ] },
+     body:"Each practice case opens in turn, and Rooke watches with something on his face that is not quite pride.\n\nIn the last case lies a single coin, green with age, stamped with a tower that stands on no street of Harrowmere. When she asks about it, he turns it face down and changes the subject.\n\nShe palms it when he isn't looking. It is the first thing she ever steals from him."} ] },
 
  { loc:"The Quay Office", sub:"Tideward Quay, midnight rain", scene:"docks", img:"lv03.png",
    pal:{bg:"linear-gradient(180deg,#0e1a26,#070b10 75%)",accent:"#6fb0c4",glow:"#bfe6f2",metal:"#8aa6b0"},
@@ -404,8 +404,8 @@ const LEVELS = [
     {on:"allset",who:"Jay",text:"And we are gone, like we were never born. First rule of the Tumblers, eh? Fall all you like. Just pull up before the ground."} ],
    intro:[
     {chap:"Chapter III",ttl:"The Quay Office",
-     body:"Rain comes in sideways off the black water. Kess is sixteen now, quick and quiet, and tonight she works with Jay, a long streak of grin and loyalty who has watched her back since they were children racing the tide for dropped cargo.\n\nRooke wants the harbourmaster's manifests. He did not say why. Lately, Kess has started noticing how often that is true.",
-     who:"Jay",vox:"\u201cIn and out, like always. We don't get caught. Not us. The gulls will sing songs about us one day, Kess.\u201d"} ],
+     body:"Rain comes in sideways off the black water. Kess is sixteen now, quick and quiet, and tonight she works with Jay, a long streak of grin who has watched her back since they were children racing the tide for dropped cargo.\n\nRooke wants the harbourmaster's manifests. He did not say why. He never says why, and lately Kess has started counting how often that is true.",
+     who:"Jay",vox:"\u201cIn and out, like always. We don't get caught. Not us. I plan to die rich, old, and asleep, Kess, and tonight is none of those three.\u201d"} ],
    outro:[ {ttl:"Grid Nine",
      body:"The cabinet clicks. The manifests vanish into Jay's coat, and the two of them melt into the rain, laughing the silent laugh of people who got away clean.\n\nLater, alone, Kess reads what she was never meant to read. Salvage permits, sealed by the Charter Court. Dredging rights for something beneath the harbour, marked only as <em>Grid Nine</em>. The Houses are pulling things up from under the city.\n\nRooke pays them in coin and praise, and files the papers somewhere she never sees."} ] },
 
@@ -417,12 +417,12 @@ const LEVELS = [
    tut:"Fine locks are proud and stiff. Push past the band and the pin binds. Let it settle, then ask again.",
    beats:[
     {on:"start",who:"Kess",text:"A collector of drowned things. Half the relics in these cases came up from Grid Nine. Rooke wants one box, only one, and he would not say what is inside it."},
-    {on:"set",n:2,who:"Kess",text:"Wait. That mark on the reliquary lid. The hovering falcon. That is my father's mark. That is my father's mark, on a thing pulled out of the sea."},
+    {on:"set",n:2,who:"Kess",text:"Wait. The mark on the reliquary lid. The hovering falcon. That is my father's mark, on a thing pulled up out of the sea."},
     {on:"time",at:26,who:"Kess",text:"Breathe. He used to hold my hands over the practice pins. Breathe, little hover, he'd say. The lock can hear your heartbeat."},
     {on:"allset",who:"Kess",text:"Whatever you are, you were his. Which means tonight you are mine. Not Rooke's. Mine."} ],
    intro:[
     {chap:"Chapter IV",ttl:"The Antiquarian",
-     body:"The mark is a private collector on Highcrest hill. Marble floors, gold leaf, and case after case of relics dredged from the water beneath Harrowmere. Green bronze, drowned glass, doorplates from streets that no map admits to.\n\nRooke wants a sealed reliquary the size of a bible. These old locks are proud, stiff things. Force them and they bind."} ],
+     body:"The mark is a private collector on Highcrest hill. Marble floors, gold leaf, and case after case of relics dredged from the water beneath Harrowmere. Green bronze, drowned glass, doorplates from streets that no map admits to.\n\nRooke wants a sealed reliquary the size of a bible. He would not say what is inside it. These old locks are proud, stiff things. Force them and they bind."} ],
    outro:[ {ttl:"The letter",sigil:true,
      body:"Inside the reliquary there is no gold. A roll of waxed cloth. A hand-drawn map of streets that do not exist. And a letter in her father's writing, salt-stained and patient, twelve years old and addressed to her.\n\n<span class='vox'>\u201cIf the wing has found you, little hover, then forgive me its weight. Find the old man in Saltrock who drew the under-roads. And trust no one who feeds you, for they were paid to.\u201d</span>\n\nShe pockets all of it before Rooke can see. It is the first secret she has ever kept from him, and it fits her hand like a key."} ] },
 
@@ -436,12 +436,12 @@ const LEVELS = [
     {on:"start",who:"Jay",text:"It's a Charter safe-door, Kess. A dial. Like the practice one in the cellar, remember? Sweep slow, release clean. You could do this asleep."},
     {on:"time",at:10,who:"Jay",text:"Lanterns on the stair. Kess, there are lanterns on the stair that should not be lit. Somebody knew we were coming tonight. Somebody told them."},
     {on:"half",who:"Jay",text:"Leave me. Kess, look at me through the bars. Leave me. That is an order from your elder and better."},
-    {on:"allset",who:"Kess",text:"Shut up and run, Jay. One of us gets out, and it was always going to be you. Tell the gulls I said something brave."} ],
+    {on:"allset",who:"Kess",text:"Shut up and run, Jay. One of us gets out, and it was always going to be you. Don't come back for me. I mean it."} ],
    intro:[
     {chap:"Chapter V",ttl:"The Strongroom",
      body:"The second Highcrest job is wrong from the first breath. Lanterns flare where no lanterns should be. Boots on marble, too many, too sure. Someone knew.\n\nJay is trapped behind the strongroom's dial-door with the Watch closing on the stair. Kess has picked pins all her life. A dial is a different question. Not which. When."} ],
    outro:[ {ttl:"The man on the stair",
-     body:"The door swings. She hurls Jay through it, into the dark and the rain, and then the Watch is on her, and the cold iron, and the hood.\n\nThe last thing she sees, through the closing black, is the top of the stair. A tall figure in a velvet coat, standing among the lanterns, untouched and unhurried. Not running. Counting.\n\nRooke."} ] },
+     body:"The door swings. She hurls Jay through it, into the dark and the rain, and then the Watch is on her, and the cold iron, and the hood.\n\nThe last thing she sees, through the closing black, is the top of the stair. A tall figure standing among the lanterns, untouched and unhurried. Not running. Counting.\n\nShe knows that coat. All the way down into the dark, she keeps telling herself she is wrong."} ] },
 
  { loc:"The Cell", sub:"Saltrock Gaol, level minus three", scene:"cell", img:"lv06.png",
    pal:{bg:"linear-gradient(180deg,#1a1c20,#08090a 78%)",accent:"#8d97a0",glow:"#cdd6dd",metal:"#9aa3aa"},
@@ -451,15 +451,15 @@ const LEVELS = [
    tut:"No light to see the bands. Move slowly and feel for the shimmer. The shim survives two slips. The third snaps it.",
    beats:[
     {on:"start",who:"Anselm",text:"Hands that quiet, in the dark, in irons. I know that school of work, child. That is a Warden's touch, or I am even older than I think."},
-    {on:"set",n:1,who:"Anselm",text:"The key at your throat. Let an old man look at it. Oh. Oh, girl. Do you have the first idea what you have been wearing all these years?"},
-    {on:"time",at:32,who:"Anselm",text:"They cut this gaol into the old sea-wall. Listen. At high tide you can hear Sorenne breathing through the stones. The city they drowned still keeps time."},
-    {on:"allset",who:"Anselm",text:"That is a wing. Half of the key that seals the Vault of Names. The last hands that held it belonged to Calder Vane, the last of the Keywrights. They hanged him in the fish market and called it justice."} ],
+    {on:"set",n:1,who:"Anselm",text:"The key at your throat. Let an old man look at it. Oh. Oh, girl. Do you know what you have been wearing all these years?"},
+    {on:"time",at:32,who:"Anselm",text:"They cut this gaol into the old sea-wall. Listen. At high tide you can hear Sorenne breathing through the stones. The drowned city still keeps time."},
+    {on:"allset",who:"Anselm",text:"That is a wing. Half of a Warden's key. There is no lock left in Harrowmere worth it, because the lock it answers is not in Harrowmere. It is under it."} ],
    intro:[
     {chap:"Chapter VI",ttl:"The Cell",
-     body:"Saltrock Gaol is cut into the old sea-wall, so deep that the tide breathes through the stones. They took her picks, her boots, and her name, and gave her a number.\n\nHer only tool is a shim of tin, filed from her cup across nine patient nights. It is thin as a promise. In this dark she cannot see the bands at all. She must ask the lock its question by feel alone."} ],
-   outro:[ {ttl:"The Honest City",
-     body:"The manacles open. In whispers across the cold iron, the old man gives her the truth in pieces, like bread.\n\nHis name is Anselm. He drew maps, once, for the order that kept the Vault of Names, in the city below the city. <em>Sorenne</em>, the Honest City, where every debt, deed, birth and name was kept where all could read it and none could erase it. The Cormorant Houses owed Sorenne more than they could ever repay.\n\nSo they drowned the ledger. And everyone holding it.",
-     who:"Anselm",vox:"\u201cYour father was the last of the Keywrights. And you have carried the Vault's own wing past every guard in Harrowmere, and never known it.\u201d"} ] },
+     body:"Saltrock Gaol is cut into the old sea-wall, so deep that the tide breathes through the stones. They took her picks, her boots, and her name, and gave her a number.\n\nHer only tool is a shim of tin, filed across nine patient nights from a file that came to her baked inside a loaf of bread. No name with it. Just a scrap of paper, two words, in handwriting she would know anywhere: \u201cPull up.\u201d"} ],
+   outro:[ {ttl:"The old man",
+     body:"The manacles open. The old man gives his name in a whisper: Anselm. A mapkeeper, once, for an order sworn to the city below. He will say no more than that inside these walls. Saltrock's stones are paid to listen.\n\nTwo things only, before the lamps come round.\n\nThat the brass at her throat is half of a key. And that the last man who carried one was hanged in the fish market, twelve years gone. He does not say the name. She says it for him.",
+     who:"Anselm",vox:"\u201cThere is a way out of this place, child. It goes down. I will show you, and you will not thank me.\u201d"} ] },
 
  { loc:"The Drowned Stair", sub:"Below Saltrock, the tide line", scene:"stair", img:"lv07.png",
    pal:{bg:"radial-gradient(120% 100% at 50% 14%,#101a33,#05070e 74%)",accent:"#7c8fd0",glow:"#cfe0ff",metal:"#8a98c0"},
@@ -468,15 +468,15 @@ const LEVELS = [
    mech:{timer:50,phases:[{type:"gates",rings:4,tol:.2,gapW:.5,speedMin:.7,speedMax:1.3,surge:true}]},
    tut:"Salt-bitten warded rings, driven by the current. The surge speeds them and slacks them. Tap each gap onto the bolt-line in the lull, all four must line up.",
    beats:[
-    {on:"start",who:"Anselm",text:"Through the flood-gate, while the gaol sleeps. The locks down here are salt-bitten and half alive. The tide moves their bones. You cannot force them, child. You catch them."},
-    {on:"time",at:12,who:"Anselm",text:"I will tell you how Sorenne died, since no one living will say it aloud. The storm-gates could only be opened from within. By a Warden's own key."},
-    {on:"half",who:"Anselm",text:"His name was Imre Shrike. A Warden, sworn like all the rest. The Houses bought him, and he turned his key, and the sea did everything after. Forty thousand names, child. One key."},
-    {on:"allset",who:"Anselm",text:"And one Warden stayed below. Aldous Crane went down with his city to seal the Vault, so the truth would outlive the crime. Your line begins with him. Mind which side of that story you stand on. And mind who sent you looking."} ],
+    {on:"start",who:"Anselm",text:"Through the flood-gate, while the gaol sleeps. The locks down here are salt-bitten and half alive. The tide moves their bones. Do not force them, child. Catch them."},
+    {on:"time",at:12,who:"Anselm",text:"You should know what is under your feet. Sorenne. The Honest City. Every debt, every deed, every birth, every name, kept where all could read them and none could erase them. The Cormorant Houses owed Sorenne more than they could ever repay."},
+    {on:"half",who:"Anselm",text:"So they drowned the ledger. The storm-gates opened only from within, by a Warden's own key. His name was Imre Shrike. The Houses bought him, he turned his key, and the sea did everything after. Forty thousand names, child. One key."},
+    {on:"allset",who:"Anselm",text:"And one Warden stayed below. Aldous Crane drowned with his city to seal the Vault of Names, so the truth would outlive the crime. Your line begins with him, child. Your father was the last of his Keywrights. Mind who sent you looking."} ],
    intro:[
     {chap:"Chapter VII",ttl:"The Drowned Stair",
-     body:"They go down while the gaol sleeps, through a flooded gate that Anselm alone remembers. A searchlight sweeps the black water. The stair runs below the tide line, into the cold breath of the drowned city.\n\nAnselm's lungs are bad. At the waterline he stops, and presses his life's work into her hands. The under-roads of Sorenne, drawn from memory. Every street he once swore to forget."} ],
+     body:"They go down while the gaol sleeps, through a flooded gate that Anselm alone remembers. A searchlight sweeps the black water behind them. The stair runs below the tide line, into the cold breath of the drowned city.\n\nAnselm's lungs are bad. He talks anyway, the whole way down. He has waited thirty years for someone who needed to hear it."} ],
    outro:[ {ttl:"Down",
-     body:"She leaves him at the waterline with his eyes full of a city only he can see.\n\n\u201cI would only weep,\u201d he says, \u201cand the water down there is salt enough already.\u201d\n\nKess goes down alone, past the tide line, past the last of the lamplight, into Sorenne. The towers stand whole in the green dark. Pale fire drifts between them like snow that refuses to fall. It is the most beautiful thing she has ever seen, and it is a graveyard, and her family's name is written somewhere inside it."} ] },
+     body:"At the waterline his chest gives out, and he presses a roll of oilskin into her hands. The under-roads of Sorenne, redrawn in gaol from memory: the Wardens' dry tunnels that ride above the flooded streets. Every road he once swore to forget.\n\n\u201cMy daughter hid the first maps. Lessa. When the Houses came for our order, she burned them rather than hand them over, so they took her. No trial. No grave. They unwrote her, child. No record she was ever born. Except one place, below the tide, where nothing is ever erased.\u201d\n\nHe cannot come. His lungs would not survive the deep roads.\n\n\u201cFind her page in the Vault. Read it out loud. Even if only the water hears.\u201d\n\nKess goes down alone, past the last of the lamplight, into Sorenne. The towers stand whole in the green dark, lit by drifting cold fire. The tallest of them climbs clean out of sight, up toward the harbour. She has seen that tower before. Green with age, stamped on a stolen coin."} ] },
 
  { loc:"Sorenne", sub:"The drowned city, the craft quarter", scene:"veyra", img:"lv08.png",
    pal:{bg:"radial-gradient(120% 110% at 50% 58%,#0a2e33,#03100f 72%)",accent:"#3fd0c4",glow:"#9af7ec",metal:"#4fb8b0"},
@@ -485,17 +485,17 @@ const LEVELS = [
    mech:{timer:55,phases:[{type:"pins",pins:5,tol:.09,rise:1.0,fall:1.7,sequence:true,tension:true,decoy:3}]},
    tut:"A century of salt has taught these locks to lie. False bands click, then slip. Only a true catch holds.",
    beats:[
-    {on:"start",who:"Kess",text:"Streets. Doorways. Washing-lines still strung between the windows. They didn't evacuate this city. They drowned it on a market day."},
+    {on:"start",who:"Kess",text:"Kettles on the stoves. Boots by the doors. They didn't evacuate this city. They drowned it on a market day."},
     {on:"set",n:2,who:"Kess",text:"These locks lie. They click like the truth and then they let go. Even the metal down here learned what the Houses taught it."},
-    {on:"time",at:28,who:"Kess",text:"There. The hovering falcon, carved over a workshop door. Every lock in this city was a question, and my father's family wrote half of them."},
+    {on:"time",at:28,who:"Kess",text:"He made this lock. I can feel his habits in the pins. It is the closest I have come to holding his hand in twelve years."},
     {on:"allset",who:"Kess",text:"Open nothing for the man who feeds you. You knew, Da. All those years before I was even born, and you already knew."} ],
    intro:[
     {chap:"Chapter VIII",ttl:"Sorenne",
-     body:"Sorenne keeps its dead politely. Towers stand intact in the green-black water, lit by drifting clouds of cold fire. Doors stand ajar on rooms where the kettles still sit on the stoves.\n\nThis was the Honest City. One law stood above all others: every debt, deed, birth and name, locked where all could reach it and none could erase it. The Cormorant Houses owed it everything. So it had to drown.\n\nDeep in the craft quarter, under the sign of the hovering falcon, her father's workshop is waiting.",
-     who:"cut deep into the workshop wall, in a steady hand",
-     vox:"\u201cKess. If you are reading this, the wing found you, and I am sorry that I could not. Open nothing for the man who feeds you. He sold our road once and he will sell it twice. Go to the Vault. Open it. Let the city say its own name again.\u201d"} ],
+     body:"Sorenne keeps its dead politely. Doors stand ajar. Washing-lines still hang between the windows. The under-roads carry her above the flooded streets, dry and silent, the way the Wardens walked them a hundred years ago.\n\nDeep in the craft quarter, under the sign of the hovering falcon, her father's workshop is waiting. Beside its door, someone has cut letters into the wall.",
+     who:"cut into the workshop wall, in a steady hand",
+     vox:"\u201cKess. If you are reading this, the wing found you and I could not. Hear me now. The Vault is not a strongroom. Crane built it to give everything back. Turn its heart, and the galleries rise up the inside of the Bell Tower, past the tide, into the open air, where every soul in Harrowmere can read what the Houses did. No power on earth can wind them back down. That is why they kill for it.<br><br>Open nothing for the man who feeds you. He sold our road once and he will sell it twice.<br><br>Go to the Vault, little hover. Give the city back its name.\u201d"} ],
    outro:[ {ttl:"The seal",sigil:true,
-     body:"At the foot of the wall there is a grave with no body in it. Just a name. <em>CALDER VANE, KEYWRIGHT</em>, cut by his own hand, because he knew that no one else would ever cut it.\n\nBeside it, wrapped in oilcloth, the thing he wanted her to find: the Charter Court's warrant for his hanging. Sworn testimony of an informant. Fee paid in full. Sealed by the broker who sold him.\n\nThe seal is a rook.\n\nShe sits a long time in the drowned city, with her father's death in her hands, and understands at last exactly who has been feeding her."} ] },
+     body:"At the foot of the wall there is a grave with no body in it. Just a name. <em>CALDER VANE, KEYWRIGHT</em>, cut by his own hand, because he knew that no one else would ever cut it.\n\nBeside it, wrapped in oilcloth, the thing he wanted her to find: the Charter Court's warrant for his hanging. Sworn testimony of an informant. Fee, paid in full. Sealed by the broker who sold him.\n\nThe seal is a rook.\n\nShe sits a long time in the drowned city, with her father's death in her hands, and understands who has been feeding her."} ] },
 
  { loc:"The Vault of Names", sub:"The heart of Sorenne", scene:"vault", img:"lv09.png",
    pal:{bg:"radial-gradient(120% 100% at 50% 34%,#2c2008,#0a0703 72%)",accent:"#e8b94a",glow:"#ffe07a",metal:"#e0c060"},
@@ -506,14 +506,14 @@ const LEVELS = [
    beats:[
     {on:"start",who:"Rooke",text:"You found it. Of course you found it. I raised you on questions, little hover. I just never believed you would ask the right one."},
     {on:"set",n:1,who:"Rooke",text:"Say it, then. Yes. I sold Calder Vane to the Charter Court. My oldest friend. They were going to end the whole Vane line, root and stem and seed. You were the seed."},
-    {on:"time",at:22,who:"Rooke",text:"I gave them your father, and with the change I bought you. Food. Walls. A trade. Hate me with your whole chest if you like, but you are alive to do it. That was the price, and I paid it every day for twelve years."},
-    {on:"allset",who:"Rooke",text:"Your half is open. And here is mine, sparrow. The Houses gave me Shrike's wing to keep buried, the same night I buried your father. No bird flies on one wing."} ],
+    {on:"time",at:22,who:"Rooke",text:"I gave them your father, and with the change I bought you. Food. Walls. A trade. And when you started reading papers you were only paid to steal, I bought you a cell in Saltrock, because the Houses' next offer was a rope. Hate me with your whole chest, girl. You are alive to do it."},
+    {on:"allset",who:"Rooke",text:"Your half is open. And here is mine. The Houses gave me Shrike's wing to keep buried, the same night I buried your father. This door was cut for two keys turning together, Kess. Now watch what it does with two keys at war."} ],
    intro:[
     {chap:"Chapter IX",ttl:"The Vault of Names",
-     body:"The Vault of Names fills the end of a drowned avenue like a brass cathedral laid on its side. Rings within rings, ten thousand teeth, and at its heart a keyway with two mouths.\n\nHer wing turns once, and stops. Half a mechanism. Half an answer.\n\nBehind her, boots on wet stone. Unhurried. A velvet coat that even Sorenne cannot dull.",
+     body:"The Vault of Names stands at the root of the Bell Tower, filling the end of a drowned avenue like a brass cathedral laid on its side. Rings within rings, ten thousand teeth, and at its heart a keyway with two mouths. It was built for two Wardens, turning together.\n\nHer wing fits the left mouth. It turns once, and stops. Half a mechanism. Half an answer.\n\nBehind her, boots on wet stone. Unhurried. A velvet coat that even Sorenne cannot dull.",
      who:"Rooke",vox:"\u201cI kept you alive, Kess. That was my apology. Twelve years long and paid in bread. Now open the door, and let me close it forever.\u201d"} ],
    outro:[ {ttl:"One turn more",
-     body:"Ring by ring, her half of the great lock surrenders. The Vault's face splits down the centre. Her side open. His side sealed. The whole truth of a drowned city hanging on one turn more.\n\nRooke steps forward with the second wing raised, and for a single breath he looks almost old.\n\n\u201cGood girl,\u201d he says quietly. \u201cNow watch me bury it.\u201d"} ] },
+     body:"Ring by ring, her half of the great lock surrenders, and ratchets, and holds. The Vault's face stands split down the centre. Her side open. His side sealed. The whole truth of a drowned city hanging on one mouth more.\n\nRooke seats Shrike's wing in the second keyway with the ease of a man who has rehearsed this for twelve years. Turned with hers, it opens the door. Turned against hers, it winds the lock dead: sealed until the sea outlives the city.\n\n\u201cGood girl,\u201d he says quietly. \u201cNow watch me bury it.\u201d"} ] },
 
  { loc:"The Last Lock", sub:"The Vault face, the equinox storm", scene:"storm", img:"lv10.png",
    pal:{bg:"radial-gradient(120% 100% at 50% 30%,#1c1015,#040305 72%)",accent:"#d9c2c8",glow:"#ffffff",metal:"#c8a86a"},
@@ -528,17 +528,21 @@ const LEVELS = [
       tut:"The master ring. Hold to sweep, release inside the arc. Finish what Crane started."} ]},
    tut:"He will fight you through the brass itself. Set your pins anyway. Then the wards, then the master ring.",
    beats:[
-    {on:"start",who:"Kess",text:"You taught me a lock is a question, Rooke. So here is mine. What is a city worth, if it has to drown the truth to stand?"},
+    {on:"start",who:"Kess",text:"You taught me a lock is a question, Rooke. So here is mine. What is a city worth, if it has to drown the truth to keep standing?"},
     {on:"time",at:16,who:"Rooke",text:"Safe! It is worth SAFE, you stubborn, brilliant child. Names start fires. I have spent thirty years keeping you, and this whole rotten city, out of the smoke."},
-    {on:"set",n:3,who:"Kess",text:"No, Rooke. Not safe. Afraid. I grew up in your house. I know the difference better than anyone alive."},
-    {on:"phase",n:2,who:"Rooke",text:"Wards. Crane's own hand, those rings. He never trusted one question to hold a door. Neither, little hover, do I."},
-    {on:"phase",n:3,who:"Rooke",text:"The master ring. Forty thousand names behind one turn, and the Houses' true ledger crowning the pile. Last chance, little hover. Some doors only open once."},
-    {on:"allset",who:"Kess",text:"Then let this one open."} ],
+    {on:"set",n:3,who:"Kess",text:"No, Rooke. Not safe. Afraid. I grew up in your house. I know the difference better than anyone alive. And stop calling me little hover. That name was my father's, and you sold him."},
+    {on:"phase",n:2,who:"Rooke",text:"Hear that grinding, under the storm? That is the lock dying. Crane cut it for two keys in agreement. Keep fighting me and it seals itself forever, and I do not even have to win. I only have to hold on."},
+    {on:"phase",n:3,who:"Kess",text:"Then hold on. Strip the last lock the Vanes ever cut, with the last Vane watching you do it. My father wrote that you would sell us twice, Rooke. Prove him right."},
+    {on:"allset",who:"Rooke",text:"...He always did know me better than I liked."} ],
    intro:[
     {chap:"Chapter X",ttl:"The Last Lock",
-     body:"Two wings in one lock now. His turn seals the Vault until the sea outlives the city. Hers opens it. The mechanism cannot serve them both, and Rooke fights her for it through the brass itself, jarring loose every pin she sets, while far above the equinox storm breaks over Harrowmere like a verdict.\n\nOne hundred and seven years ago, on this exact spot, a Warden made the other choice."} ],
+     body:"Two wings in one lock, turning against each other. Crane cut this lock for Wardens in agreement. Set at war, it grinds itself to death, and a dead lock keeps the Houses' secret forever. Rooke does not have to beat her. He only has to hold on.\n\nHe cannot reach her without letting go of his wing. She cannot stop him except through the brass. Far above them, the equinox storm is breaking over Harrowmere.\n\nOne hundred and seven years ago, on this exact spot, a bought man turned his key and a city drowned. Tonight another bought man is turning his."} ],
    outro:[ {ttl:"Let it remember",epilogue:true,
-     body:"The master ring turns with a sound like a held breath let go.\n\nNo gold. Shelves. Shelves beyond counting, dry behind brass and glass for a hundred years. Every birth, every debt, every deed, every name the Cormorant Houses drowned, and their own true ledger crowning the stacks like a confession.\n\nRooke's wing drops from his hand. He does not pick it up. \u201cThey will come for you now,\u201d he says. \u201cAll seven Houses.\u201d\n\n\u201cLet them come,\u201d says Kess. \u201cThey will have to read the charges first.\u201d\n\nShe climbs toward the storm with a kestrel hovering at her throat and a city remembering its own name behind her. On a far wharf, a long streak of grin is waiting in the rain, the way he always said he would be.\n\nBy spring, they say, the under-folk of Harrowmere had begun greeting each other with their old names. Out loud. In daylight.\n\n<em>The End</em>"} ] }
+     body:"She braced for his pull on the master ring. It never came.\n\nThe ring comes around clean, and through the Vault's opening heart she sees why. Rooke's hand, open at his side. Shrike's wing, lying on the wet stone. He does not pick it up.\n\nThe doors fold back. No gold. Shelves. Shelves beyond counting, dry behind brass and glass for a hundred years. Every birth, every debt, every deed, every name the Cormorant Houses drowned, and their own true ledger crowning the stacks like a confession.\n\nThen the chains Crane wound a century ago let go their counterweights, and the galleries begin to rise."},
+    {ttl:"The Bell Tower",
+     body:"She rides the galleries up the inside of the Bell Tower, past the tide line, into the storm, with forty thousand names climbing under her feet. Rooke follows in silence. He is still wearing the velvet coat. It is ruined.\n\nThe tower's crown stands open to the harbour for the first time in a hundred years. By the time the storm blows out, there are boats below: wharf-rats, fishwives, under-folk with lanterns, come out to read the tower their grandmothers swore was a reef.\n\nOn the nearest wharf, soaked through and grinning, is Jay. He bribed three turnkeys to get a file into a loaf of bread, and he has watched this water at every low tide since.\n\n\u201cPulled up,\u201d he says, when she reaches him. \u201cBefore the ground and everything.\u201d"},
+    {ttl:"What it cost",
+     body:"The Houses' lawyers called the Vault a forgery for one whole season. But no one can argue forty thousand pages back under the sea, and the broker who had brokered everything walked into the new court and confessed. The first warrant sworn before the honest bench carried a rook's seal, pressed by its own hand.\n\nSaltrock's books were opened with all the rest. Anselm walked out blinking, owed thirty years. And in the Vault's third gallery, Kess found a small page and read it aloud, as promised. Lessa, daughter of Anselm. Born. Lived. Brave.\n\nRooke keeps a cell with a window now. Kess visits on quarter-days. Neither of them has yet said the word forgive, and neither of them has missed a visit. They talk about locks.\n\nBy spring, the under-folk of Harrowmere were greeting each other with their old names. Out loud. In daylight.\n\n<em>The End</em>"} ] }
 ];
 const TITLE_MUSIC={root:57,scale:"aeolian",bpm:50,prog:[0,5,3,4],density:.15};
 const HOWTO_KEY="tumbler_howto_v1";
